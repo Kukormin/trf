@@ -2,6 +2,8 @@
 /bitrix
 /_dev
 /upload
+/local/vendor
+/local/composer.phar
 yandex_*.txt
 google*.html
 cmsmagazine*.txt

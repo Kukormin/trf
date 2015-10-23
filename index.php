@@ -1,8 +1,12 @@
 <?
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
-$APPLICATION->SetTitle("1С-Битрикс: Управление сайтом");
+$APPLICATION->SetTitle("Главная");
+
 ?>
 
-Пустая страница. <a href="/bitrix/admin/">Перейти в Панель Управления</a>.
+<div class="row">
+	<div class="span4">...</div>
+	<div class="span8">...</div>
+</div>
 
 <?require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>
