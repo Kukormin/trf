@@ -25,7 +25,7 @@ class AdGroups
 	 * @param bool $refreshCache
 	 * @return array|mixed
 	 */
-	public static function getByClient($clientLogin, $refreshCache = false)
+	/*public static function getByClient($clientLogin, $refreshCache = false)
 	{
 		$return = array();
 
@@ -53,6 +53,70 @@ class AdGroups
 			    'PROPERTY_Status',
 			    'PROPERTY_RegionIds',
 			    'PROPERTY_NegativeKeywords',
+			));
+			while ($item = $rsItems->Fetch())
+			{
+				$return['ITEMS'][$item['ID']] = array(
+					'_ID' => $item['ID'],
+					'NAME' => $item['NAME'],
+					'Id' => intval($item['PROPERTY_ID_VALUE']),
+					'CampaignId' => intval($item['PROPERTY_CAMPAIGNID_VALUE']),
+					'Status' => $item['PROPERTY_STATUS_ENUM_ID'],
+					'StatusName' => $item['PROPERTY_STATUS_VALUE'],
+					'RegionIds' => $item['PROPERTY_REGIONIDS_VALUE']['TEXT'],
+					'RegionIdsArray' => unserialize($item['PROPERTY_REGIONIDS_VALUE']['TEXT']),
+					'NegativeKeywords' => $item['PROPERTY_NEGATIVEKEYWORDS_VALUE']['TEXT'],
+					'NegativeKeywordsArray' => $item['PROPERTY_NEGATIVEKEYWORDS_VALUE']['TEXT'] ?
+						unserialize($item['PROPERTY_NEGATIVEKEYWORDS_VALUE']['TEXT']) : false,
+				);
+				$return['DIRECT'][$item['PROPERTY_ID_VALUE']] = $item['ID'];
+				$return['IDS'][] = $item['PROPERTY_ID_VALUE'];
+			}
+
+			$extCache->endDataCache($return);
+		}
+
+		return $return;
+	}*/
+
+	/**
+	 * Возвращает все группы объявлений кампании
+	 * @param $campaignId
+	 * @param bool $refreshCache
+	 * @return array|mixed
+	 */
+	public static function getByCampaign($campaignId, $refreshCache = false)
+	{
+		$campaignId = intval($campaignId);
+		if (!$campaignId)
+			return false;
+
+		$return = array();
+
+		$extCache = new ExtCache(
+			array(
+				__FUNCTION__,
+				$campaignId,
+			),
+			static::CACHE_PATH . __FUNCTION__ . '/'
+		);
+		if (!$refreshCache && $extCache->initCache())
+			$return = $extCache->getVars();
+		else
+		{
+			$extCache->startDataCache();
+
+			$iblockElement = new \CIBlockElement();
+			$rsItems = $iblockElement->GetList(array(), array(
+				'IBLOCK_ID' => Utils::getIBlockIdByCode('y_groups'),
+				'PROPERTY_CampaignId' => $campaignId,
+			), false, false, array(
+				'ID', 'NAME',
+				'PROPERTY_Id',
+				'PROPERTY_CampaignId',
+				'PROPERTY_Status',
+				'PROPERTY_RegionIds',
+				'PROPERTY_NegativeKeywords',
 			));
 			while ($item = $rsItems->Fetch())
 			{

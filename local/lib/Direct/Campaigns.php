@@ -20,7 +20,7 @@ class Campaigns
 	 * @param bool $refreshCache
 	 * @return array|mixed
 	 */
-	public static function getByClient($clientLogin, $refreshCache = false)
+	public static function getByClient($clientLogin, $refreshCache = true)
 	{
 		$return = array();
 
@@ -42,8 +42,9 @@ class Campaigns
 				'IBLOCK_ID' => Utils::getIBlockIdByCode('y_campaigns'),
 			    'PROPERTY_Login' => $clientLogin,
 			), false, false, array(
-				'ID', 'NAME',
+				'ID', 'NAME', 'ACTIVE',
 			    'PROPERTY_CampaignID',
+			    'PROPERTY_SYNC',
 			    'PROPERTY_Login',
 			    'PROPERTY_AgencyName',
 			    'PROPERTY_IsActive',
@@ -61,11 +62,14 @@ class Campaigns
 			));
 			while ($item = $rsItems->Fetch())
 			{
+				$directId = intval($item['PROPERTY_CAMPAIGNID_VALUE']);
 				$return['ITEMS'][$item['ID']] = array(
 					'ID' => $item['ID'],
 					'NAME' => $item['NAME'],
-					'CampaignID' => intval($item['PROPERTY_CAMPAIGNID_VALUE']),
+					'ACTIVE' => $item['ACTIVE'],
+					'CampaignID' => $directId,
 					'Login' => $item['PROPERTY_LOGIN_VALUE'],
+					'SYNC' => $item['PROPERTY_SYNC_VALUE'],
 					'AgencyName' => $item['PROPERTY_AGENCYNAME_VALUE'],
 					'IsActive' => $item['PROPERTY_ISACTIVE_VALUE'] == 1,
 					'Status' => $item['PROPERTY_STATUS_VALUE'],
@@ -80,8 +84,8 @@ class Campaigns
 					'Shows' => intval($item['PROPERTY_SHOWS_VALUE']),
 					'ManagerName' => $item['PROPERTY_MANAGERNAME_VALUE'],
 				);
-				$return['DIRECT'][$item['PROPERTY_CAMPAIGNID_VALUE']] = $item['ID'];
-				$return['IDS'][] = $item['PROPERTY_CAMPAIGNID_VALUE'];
+				$return['DIRECT'][$directId] = $item['ID'];
+				$return['IDS'][] = $directId;
 			}
 
 			$extCache->endDataCache($return);
@@ -164,6 +168,38 @@ class Campaigns
 		return true;
 	}
 
+	public static function addByDirectIds($client, $addIds)
+	{
+		if (!$addIds)
+			return false;
+
+		$api = new Api5($client['TOKEN'], $client['NAME'], 'campaigns');
+		$resCampaigns = $api->method('get', array(
+			'SelectionCriteria' => array(
+				'Ids' => $addIds,
+			),
+			'FieldNames' => array(
+				'Id', 'Name',
+			),
+		));
+		$iblockElement = new \CIBlockElement();
+		foreach ($resCampaigns['result']['Campaigns'] as $directCampaign)
+		{
+			$iblockElement->Add(array(
+				'IBLOCK_ID' => Utils::getIBlockIdByCode('y_campaigns'),
+				'NAME' => $directCampaign['Name'],
+				'PROPERTY_VALUES' => array(
+					'CampaignID' => $directCampaign['Id'],
+					'Login' => $client['NAME'],
+				    'SYNC' => $client['SYNC'],
+				),
+			));
+		}
+
+		return true;
+	}
+
+
 	/**
 	 * Обновляет свойства кампании, если они изменились
 	 * @param $campaign
@@ -175,15 +211,20 @@ class Campaigns
 		$updated = false;
 
 		$iblockElement = new \CIBlockElement();
+		$update = array();
 		if ($campaign['NAME'] != $source['Name'])
+			$update['NAME'] = $source['Name'];
+		if ($campaign['SOURCE'] != $source)
+			$update['DETAIL_TEXT'] = $source;
+
+		if ($update)
 		{
-			$iblockElement->Update($campaign['ID'], array(
-				'NAME' => $source['Name'],
-			));
-			$updated = true;
+			$iblockElement->Update($campaign['ID'], $update);
+
+			//$campaign = self::getById($campaign['Login'], $campaign['ID'])
 		}
 
-		$propValues = array(
+		/*$propValues = array(
 			'CampaignID' => $source['CampaignID'],
 			'Login' => $source['Login'],
 			'AgencyName' => $source['AgencyName'],
@@ -211,7 +252,7 @@ class Campaigns
 		{
 			$iblockElement->SetPropertyValuesEx($campaign['ID'], Utils::getIBlockIdByCode('y_campaigns'), $update);
 			$updated = true;
-		}
+		}*/
 
 		return $updated;
 	}

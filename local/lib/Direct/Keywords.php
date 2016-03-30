@@ -15,6 +15,11 @@ class Keywords
 	const CACHE_PATH = 'Local/Direct/Keywords/';
 
 	/**
+	 * Для получения рублей
+	 */
+	const KF = 100000;
+
+	/**
 	 * ID свойства "Приоритет"
 	 */
 	const PRIORITY_PROP_ID = 71;
@@ -80,7 +85,84 @@ class Keywords
 					'UserParam1' => $item['PROPERTY_USERPARAM1_VALUE'],
 					'UserParam2' => $item['PROPERTY_USERPARAM2_VALUE'],
 					'Bid' => intval($item['PROPERTY_BID_VALUE']),
+					'BidFormatted' => number_format(intval($item['PROPERTY_BID_VALUE']) / self::KF, 2, '.', ' '),
 					'ContextBid' => intval($item['PROPERTY_CONTEXTBID_VALUE']),
+					'ContextBidFormatted' => number_format(intval($item['PROPERTY_CONTEXTBID_VALUE']) / self::KF,
+						2, '.', ' '),
+					'StrategyPriority' => $item['PROPERTY_STRATEGYPRIORITY_ENUM_ID'],
+					'Status' => $item['PROPERTY_STATUS_ENUM_ID'],
+					'StatusName' => $item['PROPERTY_STATUS_VALUE'],
+					'State' => $item['PROPERTY_STATE_ENUM_ID'],
+					'StateName' => $item['PROPERTY_STATE_VALUE'],
+				);
+				$return['DIRECT'][$item['PROPERTY_ID_VALUE']] = $item['ID'];
+				$return['IDS'][] = $item['PROPERTY_ID_VALUE'];
+			}
+
+			$extCache->endDataCache($return);
+		}
+
+		return $return;
+	}
+
+	/**
+	 * Возвращает ключевые фразы группы
+	 * @param int $groupId
+	 * @param bool $refreshCache
+	 * @return array|mixed
+	 */
+	public static function getByGroup($groupId, $refreshCache = false)
+	{
+		$groupId = intval($groupId);
+		if (!$groupId)
+			return false;
+		$return = array();
+
+		$extCache = new ExtCache(
+			array(
+				__FUNCTION__,
+				$groupId,
+			),
+			static::CACHE_PATH . __FUNCTION__ . '/'
+		);
+		if (!$refreshCache && $extCache->initCache())
+			$return = $extCache->getVars();
+		else
+		{
+			$extCache->startDataCache();
+
+			$iblockElement = new \CIBlockElement();
+			$rsItems = $iblockElement->GetList(array(), array(
+				'IBLOCK_ID' => Utils::getIBlockIdByCode('y_keywords'),
+				'PROPERTY_AdGroupId' => $groupId,
+			), false, false, array(
+				'ID', 'NAME',
+				'PROPERTY_Id',
+				'PROPERTY_AdGroupId',
+				'PROPERTY_CampaignId',
+				'PROPERTY_UserParam1',
+				'PROPERTY_UserParam2',
+				'PROPERTY_Bid',
+				'PROPERTY_ContextBid',
+				'PROPERTY_StrategyPriority',
+				'PROPERTY_Status',
+				'PROPERTY_State',
+			));
+			while ($item = $rsItems->Fetch())
+			{
+				$return['ITEMS'][$item['ID']] = array(
+					'_ID' => $item['ID'],
+					'NAME' => $item['NAME'],
+					'Id' => intval($item['PROPERTY_ID_VALUE']),
+					'AdGroupId' => intval($item['PROPERTY_ADGROUPID_VALUE']),
+					'CampaignId' => intval($item['PROPERTY_CAMPAIGNID_VALUE']),
+					'UserParam1' => $item['PROPERTY_USERPARAM1_VALUE'],
+					'UserParam2' => $item['PROPERTY_USERPARAM2_VALUE'],
+					'Bid' => intval($item['PROPERTY_BID_VALUE']),
+					'BidFormatted' => number_format(intval($item['PROPERTY_BID_VALUE']) / self::KF, 2, '.', ' '),
+					'ContextBid' => intval($item['PROPERTY_CONTEXTBID_VALUE']),
+					'ContextBidFormatted' => number_format(intval($item['PROPERTY_CONTEXTBID_VALUE']) / self::KF,
+						2, '.', ' '),
 					'StrategyPriority' => $item['PROPERTY_STRATEGYPRIORITY_ENUM_ID'],
 					'Status' => $item['PROPERTY_STATUS_ENUM_ID'],
 					'StatusName' => $item['PROPERTY_STATUS_VALUE'],

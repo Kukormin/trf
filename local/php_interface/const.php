@@ -1,2 +1,3 @@
 <?
-define ('DIRECT_API_CLIENT_ID', '2218397e1b8c41e0a0cd7b3124192c3e');
+// Context Helper
+define ('DIRECT_API_CLIENT_ID', 'effc67e2424a48c883e4b94843c9a471');

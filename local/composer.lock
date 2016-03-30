@@ -4,9 +4,43 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "ffa54f14e8378e8abbd1ee165e6023f2",
-    "content-hash": "35a239f26f96a30f3493aef7e0f87f9b",
+    "hash": "be99d609e40f87da95736a3890f0e136",
+    "content-hash": "93400a2d52a0d1470d408dd41d1b3bb8",
     "packages": [
+        {
+            "name": "googleads/googleads-php-lib",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/googleads/googleads-php-lib",
+                "reference": "0e0bcfab35c36bb46e5d8f8087e0b73b84ff5373"
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "src/Google/Api/Ads/AdWords/Lib",
+                    "src/Google/Api/Ads/Dfp/Lib"
+                ]
+            },
+            "include-path": [
+                "src/"
+            ],
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Vincent Tsao",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Google Ads APIs Client Library for PHP (AdWords, Adx, and DFP)",
+            "homepage": "https://github.com/googleads/googleads-php-lib",
+            "time": "2015-10-14 17:41:01"
+        },
         {
             "name": "guzzlehttp/guzzle",
             "version": "6.1.0",
@@ -71,16 +105,16 @@
         },
         {
             "name": "guzzlehttp/promises",
-            "version": "1.0.2",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/promises.git",
-                "reference": "97fe7210def29451ec74923b27e552238defd75a"
+                "reference": "b1e1c0d55f8083c71eda2c28c12a228d708294ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/promises/zipball/97fe7210def29451ec74923b27e552238defd75a",
-                "reference": "97fe7210def29451ec74923b27e552238defd75a",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/b1e1c0d55f8083c71eda2c28c12a228d708294ea",
+                "reference": "b1e1c0d55f8083c71eda2c28c12a228d708294ea",
                 "shasum": ""
             },
             "require": {
@@ -118,7 +152,7 @@
             "keywords": [
                 "promise"
             ],
-            "time": "2015-08-15 19:37:21"
+            "time": "2015-10-15 22:28:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -231,7 +265,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "googleads/googleads-php-lib": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

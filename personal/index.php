@@ -6,12 +6,52 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 $APPLICATION->SetTitle("Личный кабинет");
 
 ?>
-<h3>Текущие клиенты</h3><?
+<h3>Пользователи директа:</h3><?
 $clients = Clients::getByCurrentUser();
-foreach ($clients as $client)
+foreach ($clients['ITEMS'] as $client)
 {
 	?>
-	<p><?= $client["NAME"]?></p><?
+	<h4><?= $client["NAME"] ?></h4><?
+	$campaigns = Clients::checkCampaigns($client);
+	?>
+	<table class="table table-striped table-hover">
+	<thead>
+	<tr>
+		<th>Название</th>
+		<th>№</th>
+		<th>Статус</th>
+		<th></th>
+	</tr>
+	</thead>
+	<tbody><?
+
+	foreach ($campaigns['ITEMS'] as $campaign)
+	{
+		$status = '';
+		if (!$campaign['ACTIVE'] != 'Y')
+			$status = 'Не импортирована';
+		else
+		{
+			if ($campaign['CHANGES'])
+				$status = 'Есть изменения для синхронизации';
+			else
+				$status = 'Синхронизирована';
+		}
+		?>
+		<tr>
+		<td><?= $campaign['NAME'] ?></td>
+		<td><?= $campaign['CampaignID'] ?></td>
+		<td><?= $status ?></td>
+		<td><a href="/personal/campaign/import.php?client=<?= $client['ID'] ?>&id=<?= $campaign['ID']
+			?>">Импортировать</a></td>
+		<td><a href="/ads/<?= $campaign['CampaignID'] ?>/">Синхронизировать</a></td>
+		</tr><?
+	}
+
+	?>
+	</tbody>
+	</table><?
+
 }
 
 ?>

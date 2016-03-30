@@ -1,7 +1,11 @@
 <?
 
+namespace Local;
+
 /**
- * Class UserTypeNYesNo  Юзертайп "Да/Нет" - (базовый тип - N)
+ * Юзертайп "Да/Нет" - (базовый тип - N)
+ * Class UserTypeNYesNo
+ * @package Local
  */
 class UserTypeNYesNo
 {

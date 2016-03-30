@@ -123,6 +123,94 @@ class Ads
 		return $return;
 	}
 
+	public static function getByGroup($groupId, $refreshCache = false)
+	{
+		$return = array();
+
+		$extCache = new ExtCache(
+			array(
+				__FUNCTION__,
+				$groupId,
+			),
+			static::CACHE_PATH . __FUNCTION__ . '/'
+		);
+		if (!$refreshCache && $extCache->initCache())
+			$return = $extCache->getVars();
+		else
+		{
+			$extCache->startDataCache();
+
+			$iblockElement = new \CIBlockElement();
+			$rsItems = $iblockElement->GetList(array(), array(
+				'IBLOCK_ID' => Utils::getIBlockIdByCode('y_ads'),
+				'PROPERTY_AdGroupId' => $groupId,
+			), false, false, array(
+				'ID',
+				'PROPERTY_Id',
+				'PROPERTY_AdGroupId',
+				'PROPERTY_CampaignId',
+				'PROPERTY_Status',
+				'PROPERTY_StatusClarification',
+				'PROPERTY_State',
+				'PROPERTY_AdCategories',
+				'PROPERTY_AgeLabel',
+				'PROPERTY_Type',
+				'PROPERTY_Title',
+				'PROPERTY_Text',
+				'PROPERTY_Href',
+				'PROPERTY_DisplayDomain',
+				'PROPERTY_Mobile',
+				'PROPERTY_VCardId',
+				'PROPERTY_SitelinkSetId',
+				'PROPERTY_AdImageHash',
+				'PROPERTY_VCardModeration',
+				'PROPERTY_VCardModerationClarification',
+				'PROPERTY_SitelinksModeration',
+				'PROPERTY_SitelinksModerationClarification',
+				'PROPERTY_AdImageModeration',
+				'PROPERTY_AdImageModerationClarification',
+			));
+			while ($item = $rsItems->Fetch())
+			{
+				$return['ITEMS'][$item['ID']] = array(
+					'_ID' => $item['ID'],
+					'Id' => intval($item['PROPERTY_ID_VALUE']),
+					'AdGroupId' => intval($item['PROPERTY_ADGROUPID_VALUE']),
+					'CampaignId' => intval($item['PROPERTY_CAMPAIGNID_VALUE']),
+					'Status' => $item['PROPERTY_STATUS_ENUM_ID'],
+					'StatusName' => $item['PROPERTY_STATUS_VALUE'],
+					'StatusClarification' => $item['PROPERTY_STATUSCLARIFICATION_VALUE'],
+					'State' => $item['PROPERTY_STATE_ENUM_ID'],
+					'StateName' => $item['PROPERTY_STATE_VALUE'],
+					'AdCategories' => $item['PROPERTY_ADCATEGORIES_VALUE'] ?
+						unserialize($item['PROPERTY_ADCATEGORIES_VALUE']) : '',
+					'AgeLabel' => $item['PROPERTY_AGELABEL_VALUE'],
+					'Type' => $item['PROPERTY_TYPE_VALUE'],
+					'Title' => $item['PROPERTY_TITLE_VALUE'],
+					'Text' => $item['PROPERTY_TEXT_VALUE'],
+					'Href' => $item['PROPERTY_HREF_VALUE']['TEXT'],
+					'DisplayDomain' => $item['PROPERTY_DISPLAYDOMAIN_VALUE'],
+					'Mobile' => $item['PROPERTY_MOBILE_VALUE'] == 1,
+					'VCardId' => intval($item['PROPERTY_VCARDID_VALUE']),
+					'SitelinkSetId' => intval($item['PROPERTY_SITELINKSETID_VALUE']),
+					'AdImageHash' => $item['PROPERTY_ADIMAGEHASH_VALUE'],
+					'VCardModeration' => $item['PROPERTY_VCARDMODERATION_VALUE'],
+					'VCardModerationClarification' => $item['PROPERTY_VCARDMODERATIONCLARIFICATION_VALUE'],
+					'SitelinksModeration' => $item['PROPERTY_SITELINKSMODERATION_VALUE'],
+					'SitelinksModerationClarification' => $item['PROPERTY_SITELINKSMODERATIONCLARIFICATION_VALUE'],
+					'AdImageModeration' => $item['PROPERTY_ADIMAGEMODERATION_VALUE'],
+					'AdImageModerationClarification' => $item['PROPERTY_ADIMAGEMODERATIONCLARIFICATION_VALUE'],
+				);
+				$return['DIRECT'][$item['PROPERTY_ID_VALUE']] = $item['ID'];
+				$return['IDS'][] = $item['PROPERTY_ID_VALUE'];
+			}
+
+			$extCache->endDataCache($return);
+		}
+
+		return $return;
+	}
+
 	/**
 	 * Возвращает объявление по ID
 	 * @param $clientLogin

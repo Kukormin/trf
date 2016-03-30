@@ -47,6 +47,7 @@ class Clients
 			), false, false, array(
 				'ID', 'NAME', 'CODE',
 			    'PROPERTY_USER',
+			    'PROPERTY_SYNC',
 			    'PROPERTY_RoleAgent',
 			    'PROPERTY_Email',
 			    'PROPERTY_FIO',
@@ -65,10 +66,11 @@ class Clients
 			));
 			while ($item = $rsItems->Fetch())
 			{
-				$return[$item['NAME']] = array(
+				$return['ITEMS'][$item['ID']] = array(
 					'ID' => $item['ID'],
 					'NAME' => $item['NAME'],
 					'TOKEN' => $item['CODE'],
+					'SYNC' => $item['PROPERTY_SYNC_VALUE'],
 					'RoleAgent' => $item['PROPERTY_ROLEAGENT_VALUE'] == 1,
 					'Email' => $item['PROPERTY_EMAIL_VALUE'],
 					'FIO' => $item['PROPERTY_FIO_VALUE'],
@@ -85,6 +87,7 @@ class Clients
 					'SendWarn' => $item['PROPERTY_SENDWARN_VALUE'] == 1,
 					'SendAccNews' => $item['PROPERTY_SENDACCNEWS_VALUE'] == 1,
 				);
+				$return['BY_NAME'][$item['NAME']] = $item['ID'];
 			}
 
 			$extCache->endDataCache($return);
@@ -101,18 +104,32 @@ class Clients
 	public static function getByLogin($clientLogin)
 	{
 		$all = self::getByCurrentUser();
-		return $all[$clientLogin];
+		$id = $all['BY_NAME'][$clientLogin];
+		return $all['ITEMS'][$id];
+	}
+
+	/**
+	 * Возвращает клиента по ID. Клиент должен быть прикреплен к текущему пользователю
+	 * @param $id
+	 * @return mixed
+	 */
+	public static function getById($id)
+	{
+		$all = self::getByCurrentUser();
+		return $all['ITEMS'][$id];
 	}
 
 	/**
 	 * Добавление OAuth-токена
+	 * Приложение запрашивает доступ у клиента, если клиент соглашается, то ему выдается токен,
+	 * который затем искользуется для запросов к API директа от имени этого клиента
 	 * @param string $token
 	 * @return string
 	 */
 	public static function addToken($token)
 	{
 		$clients = self::getByCurrentUser();
-		foreach ($clients as $client)
+		foreach ($clients['ITEMS'] as $client)
 		{
 			if ($client['TOKEN'] == $token)
 				return 'Токен уже добавлен (' . $client['NAME'] . ')';
@@ -125,7 +142,7 @@ class Clients
 
 		$directClient = $directClient['data'][0];
 
-		foreach ($clients as $client)
+		foreach ($clients['ITEMS'] as $client)
 		{
 			if ($client['NAME'] == $directClient['Login'])
 			{
@@ -145,7 +162,7 @@ class Clients
 	}
 
 	/**
-	 * Обновляет OAuth-токена для клиента
+	 * Обновляет OAuth-токен для клиента
 	 * @param $token
 	 * @param $clientId
 	 */
@@ -171,6 +188,7 @@ class Clients
 			'CODE' => $token,
 			'PROPERTY_VALUES' => array(
 				'USER' => ExtUser::getCurrentUserId(),
+				'SYNC' => '1970-01-01T03:00:00Z',
 				'RoleAgent' => $directClient['Role'] == 'Agent' ? 1 : 0,
 				'Email' => $directClient['Email'],
 				'FIO' => $directClient['FIO'],
@@ -194,18 +212,56 @@ class Clients
 	public static function updateAll()
 	{
 		$clients = self::getByCurrentUser();
-		foreach ($clients as $client)
+		foreach ($clients['ITEMS'] as $client)
 		{
-			/*$token = $client['TOKEN'];
-			$api = new Api($token);
+			$api = new Api5($client['TOKEN'], $client['NAME'], 'changes');
 
-			// Получаем текущую дату
-			$resDate = $api->method('GetChanges', array(
-				'Timestamp' => '2015-10-01T23:59:59Z',
+			$resDate = $api->method('checkCampaigns', array(
+				'Timestamp' => $client['SYNC'],
 			));
+			debugmessage($resDate);
 			//$tsDate = $resDate['data']['Timestamp'];
-			debugmessage($resDate);*/
+			//debugmessage($tsDate);
 		}
+	}
+
+	public static function checkCampaigns($client)
+	{
+		$api = new Api5($client['TOKEN'], $client['NAME'], 'changes');
+
+		$resDate = $api->method('checkCampaigns', array(
+			'Timestamp' => $client['SYNC'],
+		));
+		//debugmessage($resDate);
+		$tsNow = $resDate['result']['Timestamp'];
+		$changesByCampaignId = array();
+		if ($resDate['result']['Campaigns'])
+		{
+			$addIds = array();
+			foreach ($resDate['result']['Campaigns'] as $changes)
+			{
+				$directCampaignId = $changes['CampaignId'];
+				$campaign = Campaigns::getByDirectId($client['NAME'], $directCampaignId);
+				if ($campaign)
+					$changesByCampaignId[$campaign['ID']] = $changes['ChangesIn'];
+				else
+					$addIds[] = $directCampaignId;
+			}
+
+			// создаем в БД кампании с этими Id
+			if ($addIds)
+				Campaigns::addByDirectIds($client, $addIds);
+		}
+
+		$campaigns = Campaigns::getByClient($client['NAME']);
+		foreach ($campaigns['ITEMS'] as &$campaign)
+		{
+			$changes = $changesByCampaignId[$campaign['ID']];
+			$campaign['CHANGES'] = $changes;
+		}
+		unset($campaign);
+
+		return $campaigns;
 	}
 
 	public static function getCampaigns($clientLogin)

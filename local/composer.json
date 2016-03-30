@@ -1,5 +1,17 @@
 {
     "require": {
-        "guzzlehttp/guzzle": "~6.0"
-    }
+        "guzzlehttp/guzzle": "~6.0",
+		"googleads/googleads-php-lib": "dev-master"
+    },
+	"repositories": [
+		{
+			"type": "git",
+			"url": "https://github.com/googleads/googleads-php-lib"
+		}
+	],
+	"autoload": {
+		"psr-4" : {
+			"Local\\":"lib"
+		}
+	}
 }
