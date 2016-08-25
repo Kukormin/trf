@@ -17,5 +17,13 @@
 <body><?
 	$APPLICATION->ShowPanel();
 	?>
+	<header>
+		<div class="container">
+			<hr />
+			<a href="/">Главная</a>
+			<a style="float:right;" href="/personal/">Личный кабинет</a>
+			<hr />
+		</div>
+	</header>
 	<div class="container">
 

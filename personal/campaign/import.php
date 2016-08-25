@@ -17,9 +17,15 @@ if (!$campaign)
 	?><p>Неверный Id кампании</p><?
 }
 
-?>
-<h3>Импорт кампании "<?= $campaign['NAME'] ?>":</h3>
-<button class="btn btn-primary" type="button" id="import_start"
-        data-client="<?= $client['ID'] ?>" data-id="<?= $campaign['ID'] ?>">Начать импорт</button><?
+if ($campaign)
+{
+	?>
+	<h3>Импорт кампании "<?= $campaign['NAME'] ?>":</h3>
+	<p>
+		<button class="btn btn-primary client_sync" type="button" data-loading-text="Импорт в процессе..."
+		        data-client="<?= $client['ID'] ?>" data-id="<?= $campaign['ID'] ?>">Начать импорт</button>
+	</p>
+	<div class="results"></div><?
+}
 
-require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");?>
+require($_SERVER["DOCUMENT_ROOT"]."/bitrix/footer.php");

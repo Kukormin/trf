@@ -1,6 +1,7 @@
 <?
 namespace Local\Direct;
 
+use Local\Api\ApiException;
 use Local\ExtCache;
 use Local\Utils;
 
@@ -20,75 +21,20 @@ class AdGroups
 	const STATUS_PROP_ID = 37;
 
 	/**
-	 * Возвращает все группы объявлений клиента
-	 * @param string $clientLogin
-	 * @param bool $refreshCache
-	 * @return array|mixed
+	 * ID свойства "Тип"
 	 */
-	/*public static function getByClient($clientLogin, $refreshCache = false)
-	{
-		$return = array();
-
-		$extCache = new ExtCache(
-			array(
-				__FUNCTION__,
-				$clientLogin,
-			),
-			static::CACHE_PATH . __FUNCTION__ . '/'
-		);
-		if (!$refreshCache && $extCache->initCache())
-			$return = $extCache->getVars();
-		else
-		{
-			$extCache->startDataCache();
-
-			$iblockElement = new \CIBlockElement();
-			$rsItems = $iblockElement->GetList(array(), array(
-				'IBLOCK_ID' => Utils::getIBlockIdByCode('y_groups'),
-			    'PROPERTY_Login' => $clientLogin,
-			), false, false, array(
-				'ID', 'NAME',
-			    'PROPERTY_Id',
-			    'PROPERTY_CampaignId',
-			    'PROPERTY_Status',
-			    'PROPERTY_RegionIds',
-			    'PROPERTY_NegativeKeywords',
-			));
-			while ($item = $rsItems->Fetch())
-			{
-				$return['ITEMS'][$item['ID']] = array(
-					'_ID' => $item['ID'],
-					'NAME' => $item['NAME'],
-					'Id' => intval($item['PROPERTY_ID_VALUE']),
-					'CampaignId' => intval($item['PROPERTY_CAMPAIGNID_VALUE']),
-					'Status' => $item['PROPERTY_STATUS_ENUM_ID'],
-					'StatusName' => $item['PROPERTY_STATUS_VALUE'],
-					'RegionIds' => $item['PROPERTY_REGIONIDS_VALUE']['TEXT'],
-					'RegionIdsArray' => unserialize($item['PROPERTY_REGIONIDS_VALUE']['TEXT']),
-					'NegativeKeywords' => $item['PROPERTY_NEGATIVEKEYWORDS_VALUE']['TEXT'],
-					'NegativeKeywordsArray' => $item['PROPERTY_NEGATIVEKEYWORDS_VALUE']['TEXT'] ?
-						unserialize($item['PROPERTY_NEGATIVEKEYWORDS_VALUE']['TEXT']) : false,
-				);
-				$return['DIRECT'][$item['PROPERTY_ID_VALUE']] = $item['ID'];
-				$return['IDS'][] = $item['PROPERTY_ID_VALUE'];
-			}
-
-			$extCache->endDataCache($return);
-		}
-
-		return $return;
-	}*/
+	const TYPE_PROP_ID = 108;
 
 	/**
-	 * Возвращает все группы объявлений кампании
-	 * @param $campaignId
+	 * Возвращает группу объявлений по Id в Директе
+	 * @param $directId
 	 * @param bool $refreshCache
 	 * @return array|mixed
 	 */
-	public static function getByCampaign($campaignId, $refreshCache = false)
+	public static function getByDirectId($directId, $refreshCache = false)
 	{
-		$campaignId = intval($campaignId);
-		if (!$campaignId)
+		$directId = intval($directId);
+		if (!$directId)
 			return false;
 
 		$return = array();
@@ -96,9 +42,11 @@ class AdGroups
 		$extCache = new ExtCache(
 			array(
 				__FUNCTION__,
-				$campaignId,
+				$directId,
 			),
-			static::CACHE_PATH . __FUNCTION__ . '/'
+			static::CACHE_PATH . __FUNCTION__ . '/',
+			864000,
+			false
 		);
 		if (!$refreshCache && $extCache->initCache())
 			$return = $extCache->getVars();
@@ -109,33 +57,37 @@ class AdGroups
 			$iblockElement = new \CIBlockElement();
 			$rsItems = $iblockElement->GetList(array(), array(
 				'IBLOCK_ID' => Utils::getIBlockIdByCode('y_groups'),
-				'PROPERTY_CampaignId' => $campaignId,
+				'=XML_ID' => $directId,
 			), false, false, array(
 				'ID', 'NAME',
 				'PROPERTY_Id',
 				'PROPERTY_CampaignId',
 				'PROPERTY_Status',
+				'PROPERTY_Type',
 				'PROPERTY_RegionIds',
 				'PROPERTY_NegativeKeywords',
+				'PROPERTY_TrackingParams',
 			));
-			while ($item = $rsItems->Fetch())
+			if ($item = $rsItems->Fetch())
 			{
-				$return['ITEMS'][$item['ID']] = array(
-					'_ID' => $item['ID'],
-					'NAME' => $item['NAME'],
-					'Id' => intval($item['PROPERTY_ID_VALUE']),
+				$return = array(
+					'ID' => $item['ID'],
+					'Name' => $item['NAME'],
+					'GroupId' => intval($item['PROPERTY_ID_VALUE']),
 					'CampaignId' => intval($item['PROPERTY_CAMPAIGNID_VALUE']),
 					'Status' => $item['PROPERTY_STATUS_ENUM_ID'],
 					'StatusName' => $item['PROPERTY_STATUS_VALUE'],
+					'Type' => $item['PROPERTY_TYPE_ENUM_ID'],
+					'TypeName' => $item['PROPERTY_TYPE_VALUE'],
+					'TrackingParams' => $item['PROPERTY_TRACKINGPARAMS_VALUE'],
 					'RegionIds' => $item['PROPERTY_REGIONIDS_VALUE']['TEXT'],
-					'RegionIdsArray' => unserialize($item['PROPERTY_REGIONIDS_VALUE']['TEXT']),
+					'RegionIdsArray' => json_decode($item['PROPERTY_REGIONIDS_VALUE']['TEXT'], true),
 					'NegativeKeywords' => $item['PROPERTY_NEGATIVEKEYWORDS_VALUE']['TEXT'],
-					'NegativeKeywordsArray' => $item['PROPERTY_NEGATIVEKEYWORDS_VALUE']['TEXT'] ?
-						unserialize($item['PROPERTY_NEGATIVEKEYWORDS_VALUE']['TEXT']) : false,
+					'NegativeKeywordsArray' => json_decode($item['PROPERTY_NEGATIVEKEYWORDS_VALUE']['TEXT'], true),
 				);
-				$return['DIRECT'][$item['PROPERTY_ID_VALUE']] = $item['ID'];
-				$return['IDS'][] = $item['PROPERTY_ID_VALUE'];
 			}
+			else
+				$extCache->abortDataCache();
 
 			$extCache->endDataCache($return);
 		}
@@ -144,58 +96,40 @@ class AdGroups
 	}
 
 	/**
-	 * Возвращает группу объявлений по ID
-	 * @param $clientLogin
-	 * @param $id
-	 * @return mixed
-	 */
-	public static function getById($clientLogin, $id)
-	{
-		$all = self::getByClient($clientLogin);
-		return $all['ITEMS'][$id];
-	}
-
-	/**
-	 * Возвращает группу объявлений по ID в Директе
-	 * @param $clientLogin
-	 * @param $directId
-	 * @return mixed
-	 */
-	public static function getByDirectId($clientLogin, $directId)
-	{
-		$all = self::getByClient($clientLogin);
-		$id = $all['DIRECT'][$directId];
-		return $all['ITEMS'][$id];
-	}
-
-	/**
 	 * Добавляет или обновляет группу объявлений
-	 * @param $clientLogin
 	 * @param $source
-	 * @return bool
+	 * @param $result
+	 * @throws ApiException
 	 */
-	public static function check($clientLogin, $source)
+	public static function check($source, &$result)
 	{
-		$group = self::getByDirectId($clientLogin, $source['Id']);
+		$group = self::getByDirectId($source['Id']);
 		if ($group)
-			$updated = self::update($group, $source);
+		{
+			$res = self::update($group, $source);
+			if ($res)
+				$result['update']++;
+			else
+				$result['same']++;
+		}
 		else
-			$updated = self::add($clientLogin, $source);
-
-		return $updated;
+		{
+			self::add($source);
+			$result['add']++;
+		}
 	}
 
 	/**
 	 * Добавляет группу объявлений на основнии данных из API
-	 * @param $clientLogin
 	 * @param $source
-	 * @return bool
+	 * @return int
+	 * @throws ApiException
 	 */
-	public static function add($clientLogin, $source)
+	public static function add($source)
 	{
 		$regionIds = array(
 			'VALUE' => array(
-				'TEXT' => serialize($source['RegionIds']),
+				'TEXT' => json_encode($source['RegionIds']),
 				'TYPE' => 'text',
 			),
 		);
@@ -203,43 +137,49 @@ class AdGroups
 		if (isset($source['NegativeKeywords']['Items']))
 			$negativeKeywords = array(
 				'VALUE' => array(
-					'TEXT' => serialize($source['NegativeKeywords']['Items']),
+					'TEXT' => json_encode($source['NegativeKeywords']['Items'], JSON_UNESCAPED_UNICODE),
 					'TYPE' => 'text',
 				),
 			);
 		$status = Utils::getPropertyIdByXml($source['Status'], self::STATUS_PROP_ID);
+		$type = Utils::getPropertyIdByXml($source['Type'], self::TYPE_PROP_ID);
 
 		$iblockElement = new \CIBlockElement();
-		$iblockElement->Add(array(
+		$id = $iblockElement->Add(array(
 			'IBLOCK_ID' => Utils::getIBlockIdByCode('y_groups'),
 			'NAME' => $source['Name'],
+			'XML_ID' => $source['Id'],
 			'PROPERTY_VALUES' => array(
 				'Id' => $source['Id'],
 				'CampaignId' => $source['CampaignId'],
-				'Login' => $clientLogin,
 				'Status' => $status,
 				'RegionIds' => $regionIds,
 				'NegativeKeywords' => $negativeKeywords,
+				'Type' => $type,
+				'TrackingParams' => $source['TrackingParams'],
 			),
 		));
-		return true;
+		if (!$id)
+			throw new ApiException('group_add_error', 500, $iblockElement->LAST_ERROR);
+
+		return $id;
 	}
 
 	/**
 	 * Обновляет свойства группы объявлений, если они изменились
-	 * @param $adGroup
+	 * @param $group
 	 * @param $source
 	 * @return bool
 	 */
-	public static function update($adGroup, $source)
+	public static function update($group, $source)
 	{
 		$updated = false;
 
 		$iblockElement = new \CIBlockElement();
 
-		if ($adGroup['NAME'] != $source['Name'])
+		if ($group['Name'] != $source['Name'])
 		{
-			$iblockElement->Update($adGroup['ID'], array(
+			$iblockElement->Update($group['ID'], array(
 				'NAME' => $source['Name'],
 			));
 			$updated = true;
@@ -247,7 +187,7 @@ class AdGroups
 
 		$regionIds = array(
 			'VALUE' => array(
-				'TEXT' => serialize($source['RegionIds']),
+				'TEXT' => json_encode($source['RegionIds']),
 				'TYPE' => 'text',
 			),
 		);
@@ -255,17 +195,20 @@ class AdGroups
 		if (isset($source['NegativeKeywords']['Items']))
 			$negativeKeywords = array(
 				'VALUE' => array(
-					'TEXT' => serialize($source['NegativeKeywords']['Items']),
+					'TEXT' => json_encode($source['NegativeKeywords']['Items'], JSON_UNESCAPED_UNICODE),
 					'TYPE' => 'text',
 				),
 			);
 		$status = Utils::getPropertyIdByXml($source['Status'], self::STATUS_PROP_ID);
+		$type = Utils::getPropertyIdByXml($source['Type'], self::TYPE_PROP_ID);
 
 		$propValues = array(
 			'CampaignId' => $source['CampaignId'],
 			'Status' => $status,
 			'RegionIds' => $regionIds,
 			'NegativeKeywords' => $negativeKeywords,
+			'Type' => $type,
+			'TrackingParams' => $source['TrackingParams'],
 		);
 
 		$update = array();
@@ -273,25 +216,28 @@ class AdGroups
 		{
 			if ($k == 'RegionIds')
 			{
-				if ($adGroup[$k] != $v['VALUE']['TEXT'])
+				if ($group[$k] != $v['VALUE']['TEXT'])
 					$update[$k] = $v;
 			}
 			elseif ($k == 'NegativeKeywords')
 			{
-				if ($adGroup[$k] === false && $v === false)
+				if ($group[$k] === false && $v === false)
 					continue;
 
-				if ($adGroup[$k] != $v['VALUE']['TEXT'])
+				if ($group[$k] != $v['VALUE']['TEXT'])
 					$update[$k] = $v;
 			}
-			elseif ($adGroup[$k] != $v)
+			elseif ($group[$k] != $v)
 				$update[$k] = $v;
 		}
 		if ($update)
 		{
-			$iblockElement->SetPropertyValuesEx($adGroup['_ID'], Utils::getIBlockIdByCode('y_groups'), $update);
+			$iblockElement->SetPropertyValuesEx($group['ID'], Utils::getIBlockIdByCode('y_groups'), $update);
 			$updated = true;
 		}
+
+		if ($updated)
+			self::getByDirectId($group['GroupId'], true);
 
 		return $updated;
 	}

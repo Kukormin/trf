@@ -44,7 +44,7 @@ class v1 extends Api
 		elseif ($method == 'supportchat')
 			return User::chat($this->request);*/
 		else
-			throw new ApiException(['wrong_endpoint'], 404);
+			throw new ApiException('wrong_endpoint', 404);
 	}
 
 }

@@ -16,6 +16,27 @@ class Clients
 	const CACHE_PATH = 'Local/Direct/Clients/';
 
 	/**
+	 * Префикс для клиентов в директе
+	 */
+	const DIRECT_PREFIX = 'tst-traffo-';
+
+	public static function createSubClient($project)
+	{
+		$api = new Api4(AGENT_DIRECT_TOKEN);
+		$directClient = $api->method('CreateNewSubclient', array(
+			'Login' => self::DIRECT_PREFIX . $project['ID'],
+			'Name' => $project['NAME'],
+			'Surname' => $project['DATA']['INFO']['company'],
+			'Currency' => 'RUB',
+		));
+
+		if (!isset($directClient['data']))
+			return false;
+
+		return $directClient['data'];
+	}
+
+	/**
 	 * Возвращает всех клиентов Директа, прикрепленных к пользователю битрикса
 	 * @param bool $refreshCache
 	 * @return array|mixed
@@ -207,6 +228,27 @@ class Clients
 	}
 
 	/**
+	 * Обновляет время синхронизации клиента
+	 * @param $client
+	 * @param $dtSync
+	 * @return bool
+	 */
+	public static function updateSync($client, $dtSync)
+	{
+		if ($dtSync != $client['SYNC'])
+		{
+			$iblockElement = new \CIBlockElement();
+			$iblockElement->SetPropertyValuesEx($client['ID'], Utils::getIBlockIdByCode('y_clients'), array(
+				'SYNC' => $dtSync,
+			));
+			self::getByCurrentUser(true);
+			return true;
+		}
+		else
+			return false;
+	}
+
+	/**
 	 * Обновляет информацию по всем клиентам текущего пользователя
 	 */
 	public static function updateAll()
@@ -225,44 +267,7 @@ class Clients
 		}
 	}
 
-	public static function checkCampaigns($client)
-	{
-		$api = new Api5($client['TOKEN'], $client['NAME'], 'changes');
 
-		$resDate = $api->method('checkCampaigns', array(
-			'Timestamp' => $client['SYNC'],
-		));
-		//debugmessage($resDate);
-		$tsNow = $resDate['result']['Timestamp'];
-		$changesByCampaignId = array();
-		if ($resDate['result']['Campaigns'])
-		{
-			$addIds = array();
-			foreach ($resDate['result']['Campaigns'] as $changes)
-			{
-				$directCampaignId = $changes['CampaignId'];
-				$campaign = Campaigns::getByDirectId($client['NAME'], $directCampaignId);
-				if ($campaign)
-					$changesByCampaignId[$campaign['ID']] = $changes['ChangesIn'];
-				else
-					$addIds[] = $directCampaignId;
-			}
-
-			// создаем в БД кампании с этими Id
-			if ($addIds)
-				Campaigns::addByDirectIds($client, $addIds);
-		}
-
-		$campaigns = Campaigns::getByClient($client['NAME']);
-		foreach ($campaigns['ITEMS'] as &$campaign)
-		{
-			$changes = $changesByCampaignId[$campaign['ID']];
-			$campaign['CHANGES'] = $changes;
-		}
-		unset($campaign);
-
-		return $campaigns;
-	}
 
 	public static function getCampaigns($clientLogin)
 	{

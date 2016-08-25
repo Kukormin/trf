@@ -3,6 +3,7 @@ use Local\Api\v1;
 use Local\Api\ApiException;
 
 include_once $_SERVER['DOCUMENT_ROOT'] . '/api/bxinit.php';
+set_time_limit(0);
 
 try
 {
@@ -13,7 +14,7 @@ catch (ApiException $e)
 {
 	header('HTTP/1.1 ' . $e->getHttpStatus());
 	$return = array(
-		'errors' => $e->getErrors(),
+		'error' => $e->getError(),
 	);
 	if ($e->getMessage())
 		$return['message'] = $e->getMessage();
@@ -23,7 +24,7 @@ catch (\Exception $e)
 {
 	header('HTTP/1.1 500 Internal Server Error');
 	echo json_encode(Array(
-		'errors' => ['unknown_error'],
+		'error' => 'unknown_error',
 		'code' => $e->getCode(),
 		'message' => $e->getMessage(),
 	), JSON_UNESCAPED_UNICODE);

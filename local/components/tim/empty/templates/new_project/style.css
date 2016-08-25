@@ -1,0 +1,43 @@
+.process .loader {
+    background: url('/i/loader.gif');
+    display: inline-block;
+    height: 40px;
+    width: 40px;
+}
+.new_project input[name=yml] {
+    width: 400px;
+}
+.parse_site {
+    position: relative;
+    display: none;
+}
+.parse_site.process {
+    display: block;
+}
+.parse_site > div {
+    position: absolute;
+    top: -42px;
+    height: 40px;
+    width: 40px;
+    right: 0;
+    background: url('/i/loader.gif');
+}
+.metric_indicator.process {
+    height: 40px;
+    width: 40px;
+    background: url('/i/loader.gif');
+}
+.yml_indicator.process {
+    height: 40px;
+    width: 40px;
+    background: url('/i/loader.gif');
+}
+.metric_cont.hidden {
+    display: none;
+}
+.quick {
+    color: #08c;
+    border-bottom: 1px dashed #08c;
+    cursor: pointer;
+}
+

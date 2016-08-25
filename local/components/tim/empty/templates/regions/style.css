@@ -1,0 +1,48 @@
+.region_tree {
+    padding-left: 20px;
+}
+.region_tree .c {
+    padding-left: 25px;
+    padding-bottom: 5px;
+}
+.region_tree .r {
+    padding-bottom: 2px;
+}
+.region_tree input[type="checkbox"] {
+    margin: 0;
+}
+.region_tree label {
+    display: inline;
+    margin: 0;
+}
+.region_tree .r span {
+    display: inline-block;
+    width: 12px;
+    font-size: 10px;
+    cursor: pointer;
+}
+.region_tree .st-c > .c {
+    display: none;
+}
+.region_tree .r.st-e > span {
+    cursor: pointer;
+}
+.region_tree .r.st-c > span {
+    cursor: pointer;
+}
+.region_tree .r.st-e > span:after {
+    content: '▼';
+}
+.region_tree .r.st-c > span:after {
+    content: '►';
+}
+#regionsModalLabel {
+    margin-bottom: 20px;
+}
+#region_search {
+    width: 300px;
+}
+.finded b {
+    font-weight: normal;
+    background-color: #fc0;
+}

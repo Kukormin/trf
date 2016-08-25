@@ -1,0 +1,66 @@
+.time_table {
+    margin-bottom: 10px;
+}
+.time_table dl {
+    display: inline-block;
+    height: 20px;
+    line-height: 20px;
+    margin: 0;
+}
+.time_table dt {
+    display: inline-block;
+    width: 25px;
+    height: 20px;
+    line-height: 20px;
+    margin: 0;
+    font-weight: normal;
+}
+.time_table dt.dw1:after {content: 'Пн';}
+.time_table dt.dw2:after {content: 'Вт';}
+.time_table dt.dw3:after {content: 'Ср';}
+.time_table dt.dw4:after {content: 'Чт';}
+.time_table dt.dw5:after {content: 'Пт';}
+.time_table dt.dw6:after {content: 'Сб';}
+.time_table dt.dw7:after {content: 'Вс';}
+
+.time_table dd {
+    display: inline-block;
+    width: 25px;
+    height: 20px;
+    line-height: 20px;
+    margin: 0;
+}
+.time_table dd input {
+    margin: 0;
+}
+.time_table .dw_row  dl {
+    border-right: 1px solid #ccc;
+}
+.time_table span {
+    display: inline-block;
+    width: 19px;
+    height: 20px;
+    line-height: 12px;
+    text-align: center;
+    cursor: pointer;
+    border-top: 1px solid #ccc;
+    font-size: 12px;
+}
+.time_table span input {
+    margin: 12px 0 6px;
+}
+.time_table .dw_row span {
+    width: 18px;
+    line-height: 20px;
+    border-right: 1px solid #ccc;
+}
+.time_table span.t100 {
+    background-color: #5e9d06;
+    color: #fff;
+}
+.time_table span.t0:after {
+    content: '-';
+}
+.time_table span.t100:after {
+    content: '+';
+}

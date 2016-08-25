@@ -8,12 +8,12 @@ class Api4
 	/**
 	 * @var Client HTTP клиент для запросов к API
 	 */
-	private $client;
+	private $http;
 
-	/**
-	 * @var string
-	 */
+	//private $url = 'https://api-sandbox.direct.yandex.ru/v4/json/';
+	private $url = 'https://api.direct.yandex.ru/live/v4/json/';
 	private $locale = 'ru';
+	private $timeout = 5;
 
 	/**
 	 * @var string OAuth-токен для запросов
@@ -26,10 +26,9 @@ class Api4
 	public function __construct($token)
 	{
 		$this->token = $token;
-		$this->client = new Client(array(
-			//'base_uri' => 'https://api-sandbox.direct.yandex.ru/v4/json/',
-			'base_uri' => 'https://api.direct.yandex.ru/v4/json/',
-			'timeout' => 5,
+		$this->http = new Client(array(
+			'base_uri' => $this->url,
+			'timeout' => $this->timeout,
 		));
 	}
 
@@ -44,7 +43,7 @@ class Api4
 			'locale' => $this->locale,
 			'token' => $this->token,
 		));
-		$response = $this->client->request('POST', '', array(
+		$response = $this->http->request('POST', '', array(
 			'body' => json_encode($data, JSON_UNESCAPED_UNICODE),
 		    'headers' => array(
 			    'Content-Type' => 'application/json',
@@ -52,6 +51,24 @@ class Api4
 		));
 		$body = (string)$response->getBody();
 		$result = json_decode($body, true);
+
+		// Запись ошибки в журнал
+		if ($result['error_code'])
+		{
+			$description = json_encode(array(
+				'REQUEST' => $data,
+				'RESPONSE' => $result,
+			), JSON_UNESCAPED_UNICODE);
+
+			$log = new \CEventLog();
+			$log->Add(array(
+				'SEVERITY' => 'WARNING',
+				'AUDIT_TYPE_ID' => 'DIRECT_API_ERROR',
+				'MODULE_ID' => 'main',
+				'ITEM_ID' => $data['method'],
+				'DESCRIPTION' => print_r($description, true),
+			));
+		}
 
 		return $result;
 	}

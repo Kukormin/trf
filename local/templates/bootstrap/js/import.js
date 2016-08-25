@@ -1,9 +1,15 @@
 $(document).ready(function() {
 
-	// Импорт кампании
-	$('#import_start').click(function() {
-		var client = $(this).data('client');
-		var id = $(this).data('id');
+	// Синхронизация
+	$('.client_sync').click(function() {
+		var btn = $(this);
+		var results = btn.parent().next('.results');
+		results.html();
+		btn.button('loading');
+		var client = btn.data('client');
+		var id = 0;
+		if (btn.data('id'))
+			id = btn.data('id');
 		$.ajax({
 			url: '/api/v1/import/campaign',
 			type: 'POST',
@@ -11,7 +17,9 @@ $(document).ready(function() {
 			contentType: 'application/json; charset=utf-8',
 			data: '{"client":' + client + ',"id":' + id + '}',
 			complete: function(response) {
-				console.log(response);
+				btn.button('reset');
+				var encoded = jQuery.parseJSON(response.responseText);
+				results.html(encoded.html);
 			}
 		});
 	})

@@ -63,7 +63,7 @@ abstract class Api
 			}
 			else
 			{
-				throw new ApiException(['wrong_http_method'], 405);
+				throw new ApiException('wrong_http_method', 405);
 			}
 		}
 
@@ -87,7 +87,7 @@ abstract class Api
 				$this->file = file_get_contents("php://input");
 				break;
 			default:
-				throw new ApiException(['method_not_allowed'], 405);
+				throw new ApiException('method_not_allowed', 405);
 				break;
 		}
 	}
@@ -102,7 +102,7 @@ abstract class Api
 		if (method_exists($this, $this->endpoint))
 			return $this->_response($this->{$this->endpoint}($this->args));
 		else
-			throw new ApiException(['wrong_endpoint'], 404);
+			throw new ApiException('wrong_endpoint', 404);
 	}
 
 	/**

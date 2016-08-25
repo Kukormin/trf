@@ -8,7 +8,12 @@ class Api5
 	/**
 	 * @var Client HTTP клиент для запросов к API
 	 */
-	private $client;
+	private $http;
+
+	//private $url = 'https://api-sandbox.direct.yandex.com/json/v5/';
+	private $url = 'https://api.direct.yandex.com/json/v5/';
+	private $locale = 'ru';
+	private $timeout = 20;
 
 	/**
 	 * @var string OAuth-токен для запросов
@@ -29,10 +34,9 @@ class Api5
 	{
 		$this->token = $token;
 		$this->clientLogin = $clientLogin;
-		$this->client = new Client(array(
-			//'base_uri' => 'https://api-sandbox.direct.yandex.com/json/v5/' . $service,
-			'base_uri' => 'https://api.direct.yandex.com/json/v5/' . $service,
-			'timeout' => 5,
+		$this->http = new Client(array(
+			'base_uri' => $this->url . $service,
+			'timeout' => $this->timeout,
 		));
 	}
 
@@ -44,15 +48,21 @@ class Api5
 	public function post($data = array())
 	{
 		$requestBody = json_encode($data, JSON_UNESCAPED_UNICODE);
-		$response = $this->client->request('POST', '', array(
+		$headers = array(
+			'Content-Type' => 'application/json; charset=utf-8',
+			'Accept-Language' => $this->locale,
+			'Authorization' => 'Bearer ' . $this->token,
+		);
+		if ($this->clientLogin)
+			$headers['Client-Login'] = $this->clientLogin;
+		$response = $this->http->request('POST', '', array(
 			'body' => $requestBody,
-		    'headers' => array(
-			    'Content-Type' => 'application/json; charset=utf-8',
-		        'Authorization' => 'Bearer ' . $this->token,
-		        'Client-Login' => $this->clientLogin,
-		    ),
+		    'headers' => $headers,
 		));
 		$body = (string)$response->getBody();
+		// TODO: лимит баллов
+		//$units = $response->getHeader('Units');
+		//debugmessage($units);
 		$result = json_decode($body, true);
 
 		// Запись ошибки в журнал
