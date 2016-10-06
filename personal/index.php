@@ -9,7 +9,7 @@ $APPLICATION->SetTitle("Личный кабинет");
 
 $user = \Local\ExtUser::getCurrentUser();
 // При первом входе предлагаем пользователю выбрать вид интерфейса
-if (!$user['UF_INTERFACE'])
+if ($user['INTERFACE']['NONE'])
 {
 	if ($_REQUEST['t'] == 'simple' || $_REQUEST['t'] == 'extended')
 	{
@@ -51,10 +51,10 @@ if (!$user['UF_INTERFACE'])
 	}
 }
 
-if ($user['UF_INTERFACE'])
+if (!$user['INTERFACE']['NONE'])
 {
 	?>
-	<a href="/projects/">Проекты</a><?
+	<?
 }
 
 /*?>

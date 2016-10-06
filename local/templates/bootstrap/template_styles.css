@@ -1,0 +1,111 @@
+/*
+Общие стили
+*/
+i.help {
+    background: url("img/glyphicons-halflings.png") -96px -96px no-repeat;
+    display: inline-block;
+    height: 14px;
+    line-height: 14px;
+    margin-top: 1px;
+    vertical-align: text-top;
+    width: 14px;
+    cursor: help;
+}
+p.examples {
+    margin-top: 5px;
+}
+p.examples a {
+    border-bottom: 1px dotted #08c;
+}
+p.examples a:hover {
+    text-decoration: none;
+    border-bottom: 1px dotted #005580;
+}
+
+.process span.loader-big {
+    background: url('/i/loader.gif');
+    display: inline-block;
+    height: 40px;
+    width: 40px;
+}
+.process span.loader.inp {
+    background: url('/i/loader20.gif');
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    vertical-align: top;
+}
+.process {
+    position: relative;
+}
+#site_overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    background: black;
+    opacity: 0.2;
+}
+/*form.error input {
+    border-color: #b94a48;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    color: #b94a48;
+}
+form.error .help-inline {
+    color: #b94a48;
+}
+form.error input:focus {
+    border-color: #953b39;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 6px #d59392;
+}*/
+
+/*
+Шаблон
+*/
+.navbar {
+    margin-top: 10px;
+}
+footer {
+    background-color: #f5f5f5;
+    border-top: 1px solid #e5e5e5;
+    margin-top: 70px;
+    padding: 30px 0;
+    text-align: center;
+}
+
+/*
+Страница проекта
+*/
+#settings_form.new .hide_new {
+    display: none;
+}
+
+/*
+Страница категории
+*/
+#base_words {
+    padding: 0 10px;
+}
+#base_words textarea {
+    width: 126px;
+    height: 200px;
+    resize: none;
+}
+#base_words .error textarea {
+    border-color: #b94a48;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    color: #b94a48;
+}
+#base_words .error textarea:focus {
+    border-color: #953b39;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 6px #d59392;
+}
+#base_words input#max {
+    width: 122px;
+}
+#additional_words textarea {
+    width: 910px;
+    margin-left: 10px;
+    height: 200px;
+    resize: none;
+}

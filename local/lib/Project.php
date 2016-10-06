@@ -18,6 +18,11 @@ class Project
 	 */
 	const IBLOCK_ID = 8;
 
+	/**
+	 * Ключ в урле
+	 */
+	const URL = 'p';
+
 	private static function getByFilter($filter)
 	{
 		$return = array();
@@ -47,21 +52,18 @@ class Project
 		));
 		while ($item = $rsItems->Fetch())
 		{
-			$data = json_decode($item['DETAIL_TEXT'], true);
-			if (!$data)
-				$data = array();
 			$return[$item['ID']] = array(
 				'ID' => intval($item['ID']),
 				'NAME' => $item['NAME'],
 				'PREVIEW_TEXT' => $item['PREVIEW_TEXT'],
-				'DETAIL_TEXT' => $item['DETAIL_TEXT'],
 				'STEP' => intval($item['PROPERTY_STEP_VALUE']),
 			    'URL' => $item['PROPERTY_URL_VALUE'],
 			    'ESTORE' => intval($item['PROPERTY_ESTORE_VALUE']),
 			    'PRODUCT_TYPE' => intval($item['PROPERTY_PRODUCT_TYPE_VALUE']),
 			    'YML' => $item['PROPERTY_YML_VALUE'],
 			    'EMAIL' => $item['PROPERTY_EMAIL_VALUE'],
-			    'DATA' => $data,
+			    'DATA_ORIG' => $item['DETAIL_TEXT'],
+			    'DATA' => json_decode($item['DETAIL_TEXT'], true),
 			    'YANDEX_SEARCH' => intval($item['PROPERTY_YANDEX_SEARCH_VALUE']),
 			    'YANDEX_NET' => intval($item['PROPERTY_YANDEX_NET_VALUE']),
 			    'GOOGLE_SEARCH' => intval($item['PROPERTY_GOOGLE_SEARCH_VALUE']),
@@ -112,10 +114,83 @@ class Project
 		return $return;
 	}
 
-	public static function getById($id)
+	public static function getById($id, $refreshCache = false)
 	{
-		$projects = self::getByCurrentUser();
+		$projects = self::getByCurrentUser($refreshCache);
 		return $projects[$id];
+	}
+
+
+	public static function getProjectsHref()
+	{
+		return '/' . self::URL . '/';
+	}
+
+	public static function getNewHref()
+	{
+		return self::getProjectsHref() . 'new/';
+	}
+
+	public static function getHref($id)
+	{
+		return self::getProjectsHref() . $id . '/';
+	}
+
+	public static function getHeaderMenu()
+	{
+		ob_start();
+
+		$add = '';
+		$class = '';
+		$selectedId = $GLOBALS['CURRENT_PROJECT_ID'];
+		if ($selectedId == 'new')
+		{
+			$add = ': Новый';
+			$class = ' class="disabled"';
+		}
+		elseif ($selectedId)
+		{
+			$project = self::getById($selectedId);
+			if ($project)
+				$add = ': <span class="current_project_name">' . $project['NAME'] . '</span>';
+		}
+
+		?>
+		<li class="dropdown">
+		<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+			Проекты<?= $add ?>
+			<b class="caret"></b>
+		</a>
+		<ul class="dropdown-menu">
+			<li<?= $class ?>>
+				<a href="<?= self::getNewHref() ?>">Добавить новый</a>
+			</li>
+			<li class="divider"></li><?
+
+			$projects = self::getByCurrentUser();
+			foreach ($projects as $project)
+			{
+				$class = '';
+				$name = $project['NAME'];
+				if ($project['ID'] == $selectedId)
+				{
+					$class = ' class="disabled"';
+					$name = '<span class="current_project_name">' . $name . '</span>';
+				}
+				$href = self::getHref($project['ID']);
+				?>
+				<li<?= $class ?>>
+					<a href="<?= $href ?>"><?= $name ?></a>
+				</li><?
+			}
+			?>
+		</ul>
+		</li><?
+
+		$return = ob_get_contents();
+		ob_end_clean();
+
+		return $return;
 	}
 
 	public static function getAdding()
@@ -133,7 +208,7 @@ class Project
 		return array_shift($return);
 	}
 
-	public static function add($url)
+	public static function add($url, $name)
 	{
 		$return = array();
 		$userId = ExtUser::getCurrentUserId();
@@ -143,22 +218,32 @@ class Project
 		$iblockElement = new \CIBlockElement();
 		$id = $iblockElement->Add(array(
 			'IBLOCK_ID' => self::IBLOCK_ID,
-			'NAME' => $url,
+			'NAME' => $name,
+			'DETAIL_TEXT' => '{"NEW":true}',
 			'PROPERTY_VALUES' => array(
 				'USER' => $userId,
-				'STEP' => 20,
+				'STEP' => 0,
 				'URL' => $url,
-			    'YANDEX_SEARCH' => 1,
+			    /*'YANDEX_SEARCH' => 1,
 			    'YANDEX_NET' => 1,
 			    'GOOGLE_SEARCH' => 1,
-			    'GOOGLE_NET' => 1,
+			    'GOOGLE_NET' => 1,*/
 			),
 		));
 
-		return $id;
+		$project = self::getById($id, true);
+		$project['NEW'] = true;
+
+		return $project;
 	}
 
-	public static function update($project, $data)
+	public static function delete($id)
+	{
+		$iblockElement = new \CIBlockElement();
+		$iblockElement->Delete($id);
+	}
+
+	public static function update($project, $newProject)
 	{
 		if (!$project['ID'])
 			return false;
@@ -166,9 +251,9 @@ class Project
 		$fields = array();
 		$props = array();
 		$detail = $project['DATA'];
-		foreach ($data as $k => $v)
+		foreach ($newProject as $k => $v)
 		{
-			if ($data[$k] == $project[$k])
+			if ($newProject[$k] == $project[$k])
 				continue;
 
 			if ($k == 'STEP')
@@ -184,9 +269,9 @@ class Project
 				$props[$k] = $v;
 		}
 
-		$json = json_encode($detail, JSON_UNESCAPED_UNICODE);
-		if ($project['DETAIL_TEXT'] != $json)
-			$fields['DETAIL_TEXT'] = $json;
+		$encoded = json_encode($detail, JSON_UNESCAPED_UNICODE);
+		if ($project['DATA_ORIG'] != $encoded)
+			$fields['DETAIL_TEXT'] = $encoded;
 
 		if ($fields || $props)
 		{
@@ -200,12 +285,11 @@ class Project
 				$iblockElement->SetPropertyValuesEx($project['ID'], self::IBLOCK_ID, $props);
 			}
 			if ($project['STEP'] == 0 || $props['STEP'] === 0)
-				self::getByCurrentUser(true);
-
-			return true;
+				$project = self::getById($project['ID'], true);
+			$project['UPDATED'] = true;
 		}
 
-		return false;
+		return $project;
 	}
 
 	public static function addFormSubmit()
@@ -222,6 +306,7 @@ class Project
 
 		$project = self::getAdding();
 		$return['step'] = $project['STEP'];
+		$projectId = $project['ID'];
 
 		$step = intval($_REQUEST['step']);
 		if ($step == 10)
@@ -235,7 +320,7 @@ class Project
 					));
 				else
 				{
-					self::add($_REQUEST['url']);
+					self::add($_REQUEST['url'], $_REQUEST['url']);
 					$return['new_project'] = true;
 				}
 			}
@@ -376,7 +461,23 @@ class Project
 			if ($project)
 			{
 				$fields = array(
-					'STEP' => 100,
+					'STEP' => 90,
+					'DATA' => array(
+						'CAMPAIGNS' => $_REQUEST['catalog'],
+					),
+				);
+				self::update($project, $fields);
+			}
+		}
+		elseif ($step == 90)
+		{
+			if ($project)
+			{
+				$fields = array(
+					'STEP' => 90,
+					/*'DATA' => array(
+						'CAMPAIGNS' => $_REQUEST['catalog'],
+					),*/
 				);
 				self::update($project, $fields);
 			}
@@ -392,12 +493,34 @@ class Project
 				self::getByCurrentUser(true);
 			}
 		}
+		elseif ($step == 15)
+		{
+			if ($project)
+			{
+				$fields = array(
+					'STEP' => 0,
+					'NAME' => $_REQUEST['name'],
+					'EMAIL' => $_REQUEST['email'],
+					'DATA' => array(
+						'INFO' => array(
+							'company' => $_REQUEST['company'],
+							'phone_prefix' => $_REQUEST['phone_prefix'],
+							'phone_code' => $_REQUEST['phone_code'],
+							'phone_number' => $_REQUEST['phone_number'],
+							'phone_add' => $_REQUEST['phone_add'],
+						),
+					),
+				);
+				self::update($project, $fields);
+				self::getByCurrentUser(true);
+			}
+		}
 
 		$project = self::getAdding();
 		if ($project)
 			$return['step'] = $project['STEP'];
 		else
-			$return['to_projects'] = true;
+			$return['redirect'] = '/projects/' . $projectId . '/';
 
 		return $return;
 	}

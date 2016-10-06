@@ -5,6 +5,7 @@
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
 	$catalog = array();
+	$links = array();
 	$project = \Local\Project::getAdding();
 
 	if ($project['YML'])
@@ -26,7 +27,30 @@
 		}
 	}
 
-	$APPLICATION->IncludeComponent('tim:empty', 'catalog', array('TREE' => $catalog));
+	if ($project['URL'])
+	{
+		if ($project['DATA']['LINKS'])
+			$links = $project['DATA']['LINKS'];
+		else
+		{
+			$links = \Local\Parser::links($project['URL']);
+			if ($links)
+			{
+				$data = array(
+					'DATA' => array(
+						'LINKS' => $links,
+					),
+				);
+				\Local\Project::update($project, $data);
+			}
+		}
+	}
+
+	$APPLICATION->IncludeComponent('tim:empty', 'catalog', array(
+		'CATALOG' => $catalog,
+		'LINKS' => $links,
+	    'URL' => $project['URL'],
+	));
 
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");
 }

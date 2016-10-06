@@ -24,6 +24,11 @@ class ExtUser
 		{
 			$rs = $user->GetByID($userId);
 			$return = $rs->Fetch();
+			$return['INTERFACE'] = array(
+				'SIMPLE' => $return['UF_INTERFACE'] == 1,
+				'EXTENDED' => $return['UF_INTERFACE'] == 2,
+			    'NONE' => !$return['UF_INTERFACE'],
+			);
 		}
 
 		return $return;
@@ -47,6 +52,21 @@ class ExtUser
 		$user->Update($userId, array(
 			'UF_INTERFACE' => $id,
 		));
+
+		// При переключении интерфейса сбрасываем шаги в создании проекта
+		$project = Project::getAdding();
+		if ($project)
+		{
+			$step = $project['STEP'];
+			if ($step > 10)
+			{
+				$fields = array(
+					'STEP' => 10,
+				);
+				Project::update($project, $fields);
+			}
+		}
+
 
 		return true;
 	}

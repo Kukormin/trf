@@ -3,27 +3,90 @@
 <head><?
 
 	/** @var CMain $APPLICATION */
+	/** @var CUser $USER */
+
 	?>
 	<title><?$APPLICATION->ShowTitle();?></title>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0"><?
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<?
 
 	$assetInstance = \Bitrix\Main\Page\Asset::getInstance();
 	$assetInstance->addCss(SITE_TEMPLATE_PATH . '/css/bootstrap.min.css', true);
-	$assetInstance->addJs(SITE_TEMPLATE_PATH . '/js/jquery.js');
-	$assetInstance->addJs(SITE_TEMPLATE_PATH . '/js/bootstrap.min.js');
-	$APPLICATION->ShowHead();
+	//$assetInstance->addJs(SITE_TEMPLATE_PATH . '/js/jquery.js');
+	//$assetInstance->addJs(SITE_TEMPLATE_PATH . '/js/bootstrap.min.js');
+	//$assetInstance->addJs(SITE_TEMPLATE_PATH . '/js/main.js');
+	$APPLICATION->ShowCSS();
 	?>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/init.js"></script>
 </head>
 <body><?
-	$APPLICATION->ShowPanel();
+	//$APPLICATION->ShowPanel();
+	$user = \Local\ExtUser::getCurrentUser();
+
 	?>
-	<header>
-		<div class="container">
-			<hr />
-			<a href="/">Главная</a>
-			<a style="float:right;" href="/personal/">Личный кабинет</a>
-			<hr />
-		</div>
-	</header>
 	<div class="container">
+		<div class="navbar">
+			<div class="navbar-inner">
+
+				<a class="brand" href="/">Главная</a>
+
+				<div class="nav-collapse collapse navbar-inverse-collapse">
+					<ul class="nav">
+						<li>
+							<a href="#">Ссылка 1</a>
+						</li><?
+
+						if ($USER->IsAuthorized())
+						{
+							$APPLICATION->AddBufferContent(Array('\Local\Project', "getHeaderMenu"));
+						}
+
+						?>
+					</ul>
+					<ul class="nav pull-right"><?
+
+						if ($USER->IsAuthorized())
+						{
+							?>
+							<li class="dropdown">
+								<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+									Режим: <?= $user['INTERFACE']['EXTENDED'] ? 'Эксперт' : 'Начинающий' ?>
+									<b class="caret"></b>
+								</a>
+								<ul class="dropdown-menu">
+									<li class="<?= $user['INTERFACE']['EXTENDED'] ? 'user-settings-regime' : 'disabled'
+									?>">
+										<a href="#" data-id="simple">Начинающий</a>
+									</li>
+									<li class="<?= $user['INTERFACE']['EXTENDED'] ? 'user-settings' : 'user-settings-regime' ?>">
+										<a href="#" data-id="extended">Эксперт</a>
+									</li>
+								</ul>
+							</li>
+							<li>
+								<a href="/personal/settings/">Настройки</a>
+							</li>
+							<li>
+								<a href="/personal/">Личный кабинет</a>
+							</li><?
+						}
+						else
+						{
+							?><li>
+								<a href="/register/">Регистрация</a>
+							</li><?
+						}
+
+						?>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="container"><?
+
+		$APPLICATION->IncludeComponent('bitrix:breadcrumb', '', Array());
+
+		?>
+		<h1><? $APPLICATION->ShowTitle(false, false); ?></h1>
 

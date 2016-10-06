@@ -16,6 +16,11 @@ class Utils
 	const CACHE_PATH = 'Local/Utils/';
 
 	/**
+	 * Разделитель для формирования титла
+	 */
+	const TITLE_SEPARATOR = ' - ';
+
+	/**
 	 * @var array HTTP статусы
 	 */
 	private static $statusByCode = array(
@@ -27,6 +32,23 @@ class Utils
 		405 => 'Method Not Allowed',
 		500 => 'Internal Server Error',
 	);
+
+	/**
+	 * Формирует заголовок
+	 * @param $parts
+	 * @return string
+	 */
+	public static function getTitle($parts)
+	{
+		$s = '';
+		foreach ($parts as $part)
+		{
+			if ($s)
+				$s = self::TITLE_SEPARATOR . $s;
+			$s = $part . $s;
+		}
+		return $s;
+	}
 
 	/**
 	 * Возвращает HTTP статус по коду

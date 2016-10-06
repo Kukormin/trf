@@ -6,8 +6,15 @@
 
 	$words = array();
 	$req = array();
+	$max = 0;
 	foreach ($_POST as $k => $v)
 	{
+		if ($k == 'max')
+		{
+			$max = $v;
+			continue;
+		}
+
 		$i = substr($k, 1);
 		$key = substr($k, 0, 1);
 		if ($key == 'c' && $v == 'on')
@@ -31,14 +38,24 @@
 	foreach ($words as $k => $ar)
 		$pos[$k] = 0;
 
-	function f($prev, $level, $words, &$res)
+	function f($prev, $level, $cnt, $words, $max, &$res)
 	{
+		if ($max > 0 && $cnt > $max)
+			return;
+
 		$i = $level + 1;
 		if ($i <= count($words))
 			foreach ($words[$i] as $s)
 			{
-				$pre = $prev . ' ' . $s;
-				f($pre, $i, $words, $res);
+				if ($s)
+				{
+					$pre = $prev . ' ' . $s;
+					f($pre, $i, $cnt + 1, $words, $max, $res);
+				}
+				else
+				{
+					f($prev, $i, $cnt, $words, $max, $res);
+				}
 			}
 		else
 		{
@@ -50,14 +67,42 @@
 	}
 
 	$res = array();
-	f('', 0, $words, $res);
+	f('', 0, 0, $words, $max, $res);
+
+	/*if ($_GET['ws'] && $res)
+	{
+
+		$filename = $_SERVER['DOCUMENT_ROOT'] . '/_log/ws.txt';
+		if (file_exists($filename))
+		{
+			$ljResponse = file_get_contents($filename);
+		}
+		else
+		{
+
+			require ($_SERVER["DOCUMENT_ROOT"] . '/local/lib/mutagen/mutagen.php');
+			$ljClient = new IXR_Client('mutagen.ru', '/?xmlrpc');
+			$mutagen = new mutagen($ljClient);
+
+			$ljClient->query('mutagen.login',"lenchik37", md5("bd19m84g"), "true");
+			$ljResponse = $ljClient->getResponse();
+
+			$ljResponse = $mutagen->getWords($res, 0);
+
+			//file_put_contents($filename, $ljResponse);
+		}
+
+		debugmessage($ljResponse);
+	}*/
 
 	?>
 	<table id="res">
-	<tr><th>Фраза</th><th>Кол-во</th></tr><?
+	<tr><th>№</th><th>Фраза</th><th>Кол-во</th></tr><?
+	$i = 0;
 	foreach ($res as $s)
 	{
-		?><tr><td><?= $s ?></td><td class="nn"></td></tr><?
+		$i++;
+		?><tr><td><?= $i ?></td><td class="word"><?= $s ?></td><td id="ws<?= $i ?>" class="nn"></td></tr><?
 	}
 	?></table><?
 

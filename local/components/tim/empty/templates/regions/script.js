@@ -1,5 +1,6 @@
 $(document).ready(function() {
 	var formInput = $('input[name=regions]');
+	var valSpan = $('#regions_text');
 	var popup = $('#regionsModal');
 	var btnSave = popup.find('.btn-primary');
 	var tree = $('.region_tree');
@@ -56,11 +57,37 @@ $(document).ready(function() {
 		return ret;
 	}
 
+	function getText(div) {
+		var ret = '';
+		div.children('.r').each(function() {
+			var input = $(this).children('input');
+			var ch = input.prop('checked');
+			if (ch) {
+				if (ret)
+					ret += ', ';
+				ret += input.siblings('label').text();
+			}
+			else {
+				var children = $(this).children('.c');
+				if (children.length) {
+					var val = getText(children);
+					if (val) {
+						if (ret)
+							ret += ', ';
+						ret += val;
+					}
+				}
+			}
+		});
+		return ret;
+	}
+
 	btnSave.click(function() {
-		var val = getVal(tree);
-		formInput.val(val);
+		formInput.val(getVal(tree));
+		valSpan.text(getText(tree));
 		popup.modal('hide');
 	});
+	valSpan.text(getText(tree));
 
 	$('.region_tree .r span').click(function() {
 		var div = $(this).parent();

@@ -24,6 +24,43 @@ $(document).ready(function() {
 	if ($('li#step80').hasClass('active'))
 		parseYml();
 
+	$('.new-project-extended').click(function() {
+		var form = $(this).closest('form');
+		if (form.hasClass('process'))
+			return false;
+
+		form.addClass('process');
+		$.ajax({
+			type: "POST",
+			url: '/ajax/new_project.php',
+			data: form.serialize(),
+			error: function() {
+				// TODO: формулировку
+				showErrorBox('При сохранении данных возникла ошибка.', alerts);
+			},
+			success: function(data) {
+				if (data.new_project == 1) {
+					parseSite();
+				}
+				if (data.errors) {
+					for (var i in data.errors) {
+						showErrorBox(data.errors[i], alerts);
+					}
+				}
+				else {
+					if (data.redirect)
+						location.href = data.redirect;
+				}
+			},
+			complete: function() {
+				form.removeClass('process');
+				form.find('.hidden').removeClass('hidden');
+				form.find('input[name=step]').val(15);
+			}
+		});
+		return false;
+	});
+
 	$('button[type=submit]').click(function () {
 		var form = $(this).closest('form');
 		if (form.hasClass('process'))
@@ -48,8 +85,8 @@ $(document).ready(function() {
 					}
 				}
 				else {
-					if (data.to_projects)
-						location.href = '/projects/';
+					if (data.redirect)
+						location.href = data.redirect;
 
 					var step = data.step;
 					var li = $('#steps li#step' + step);
@@ -81,16 +118,22 @@ $(document).ready(function() {
 
 			},
 			success: function(data) {
+				if (data.error == 'load_error')
+				{
+					showErrorBox('Ошибка загрузки сайта', alerts);
+					return false;
+				}
+
 				var input1 = $('input#phone_prefix');
 				var input2 = $('input#phone_code');
 				var input3 = $('input#phone_number');
-				if (!input1.val() && data.PHONE.prefix) {
+				if (!input1.val() && data.PHONE && data.PHONE.prefix) {
 					input1.val(data.PHONE.prefix);
 				}
-				if (!input2.val() && data.PHONE.code) {
+				if (!input2.val() && data.PHONE && data.PHONE.code) {
 					input2.val(data.PHONE.code);
 				}
-				if (!input3.val() && data.PHONE.number) {
+				if (!input3.val() && data.PHONE && data.PHONE.number) {
 					input3.val(data.PHONE.number);
 				}
 

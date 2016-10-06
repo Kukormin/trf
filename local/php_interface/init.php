@@ -14,6 +14,7 @@ require($_SERVER['DOCUMENT_ROOT'] . '/local/vendor/autoload.php');
 
 // Модули битрикса
 \Bitrix\Main\Loader::IncludeModule('iblock');
+\Bitrix\Main\Loader::IncludeModule('highloadblock');
 
 // Adwords API
 define('SRC_PATH', $_SERVER['DOCUMENT_ROOT'] . '/local/vendor/googleads/googleads-php-lib/src/');

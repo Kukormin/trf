@@ -28,7 +28,6 @@ class Parser
 			curl_setopt($ch, CURLOPT_TIMEOUT, self::TIMEOUT);
 			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::TIMEOUT);
 			$result = curl_exec($ch);
-			//debugmessage(curl_getinfo($ch));
 			curl_close($ch);
 
 			file_put_contents($filename, $result);
@@ -43,7 +42,7 @@ class Parser
 
 		$s = self::get($url);
 		if ($s === false)
-			return $return;
+			return false;
 
 		$tags = self::getTags($s);
 
@@ -61,7 +60,6 @@ class Parser
 		$return['NAME'] = self::name($tags['title']);
 		$return['ESTORE'] = self::estore($tags['title'], $tags['description']);
 		$return['PRODUCT'] = self::product($tags);
-
 
 		if (!$return['PHONE']['number'] || !$return['EMAIL'])
 		{
@@ -316,6 +314,60 @@ class Parser
 		}
 
 		return $email;
+	}
+
+	public static function links($indexUrl)
+	{
+		$links = array();
+
+		$s = self::get($indexUrl);
+		if ($s === false)
+			return $links;
+
+		$tags = self::getTags($s);
+
+		foreach ($tags['A'] as $item)
+		{
+			$href = $item['href'];
+			$name = strtolower(trim($item['_TEXT']));
+
+			if (!$href || strlen($name) < 2)
+				continue;
+
+			if (substr($href, 0, 1) == '#')
+				continue;
+
+			if (substr($href, 0, 10) == 'javascript')
+				continue;
+
+			if ($item['rel'] == 'nofollow')
+				continue;
+
+			$url = '';
+			if (substr($href, 0, 7) == 'http://')
+				$url = substr($href, 7);
+			elseif (substr($href, 0, 8) == 'https://')
+				$url = substr($href, 8);
+			elseif (substr($href, 0, 2) == '//')
+				$url = substr($href, 2);
+
+			if ($url)
+			{
+				$ar = explode('/', $url);
+				$url = $ar[0];
+				if ($url != $indexUrl)
+					continue;
+			}
+
+			if ($name == 'о нас' || $name == 'контакты' || $name == 'контакты')
+				continue;
+
+			$href = 'http://' . $indexUrl . $href;
+			$links[$href] = $item['_TEXT'];
+
+		}
+
+		return $links;
 	}
 
 	public static function name($title)

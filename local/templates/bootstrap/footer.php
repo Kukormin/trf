@@ -1,12 +1,12 @@
 	</div>
 	<footer>
 		<div class="container">
-			<hr />
 			Футер
-			<hr />
 		</div>
 	</footer>
-	<script src="http://code.jquery.com/jquery.js"></script>
+	<div id="site_overlay"></div>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/jquery.js"></script>
 	<script src="<?= SITE_TEMPLATE_PATH ?>/js/bootstrap.min.js"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/main.js"></script>
 </body>
 </html>

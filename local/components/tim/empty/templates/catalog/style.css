@@ -1,0 +1,51 @@
+.catalog_tree {
+    padding-left: 20px;
+}
+.catalog_tree .c {
+    padding-left: 25px;
+    padding-bottom: 5px;
+}
+.catalog_tree .r {
+    padding-bottom: 2px;
+}
+.catalog_tree input[type="checkbox"] {
+    margin: 0;
+}
+.catalog_tree label {
+    display: inline;
+    margin: 0;
+}
+.catalog_tree .r span {
+    display: inline-block;
+    width: 12px;
+    font-size: 10px;
+    cursor: pointer;
+}
+.catalog_tree .st-c > .c {
+    display: none;
+}
+.catalog_tree .r.st-e > span.ce:after {
+    content: '▼';
+}
+.catalog_tree .r.st-c > span.ce:after {
+    content: '►';
+}
+.catalog_tree em {
+    color: #08c;
+    border-bottom: 1px dashed #08c;
+    cursor: pointer;
+}
+.copyRegime label {
+    color: #08c;
+    border-bottom: 1px dashed #08c;
+    cursor: pointer;
+}
+.copyRegime .icon-list {
+    display: none !important;
+}
+.copyRegime input {
+    display: none !important;
+}
+.copyRegime .target {
+    display: none !important;
+}

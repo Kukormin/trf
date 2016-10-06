@@ -1,5 +1,6 @@
 <?
-if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest')
+// TODO: включить
+//if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest')
 {
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
@@ -9,6 +10,8 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	if ($project['URL'])
 	{
 		$result = \Local\Parser::site($project['URL']);
+		if ($result === false)
+			$result = array('error' => 'load_error');
 	}
 
 	header('Content-Type: application/json');

@@ -1,6 +1,7 @@
 /.idea
 /bitrix
 /_dev
+/_log
 /upload
 /local/vendor
 /local/composer.phar
