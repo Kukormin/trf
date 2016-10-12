@@ -1,8 +1,6 @@
 	</div>
 	<footer>
-		<div class="container">
-			Футер
-		</div>
+		Футер
 	</footer>
 	<div id="site_overlay"></div>
 	<script src="<?= SITE_TEMPLATE_PATH ?>/js/jquery.js"></script>

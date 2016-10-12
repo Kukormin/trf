@@ -5,11 +5,11 @@
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
 	$result = array();
-	$project = \Local\Project::getAdding();
+	$project = \Local\Main\Project::getAdding();
 
 	if ($project['URL'])
 	{
-		$result = \Local\Parser::site($project['URL']);
+		$result = \Local\Main\Parser::site($project['URL']);
 		if ($result === false)
 			$result = array('error' => 'load_error');
 	}

@@ -5,11 +5,11 @@
 	require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_before.php");
 
 	$result = array();
-	$project = \Local\Project::getAdding();
+	$project = \Local\Main\Project::getAdding();
 
 	if ($project['URL'])
 	{
-		$result = \Local\Parser::metric($project['URL']);
+		$result = \Local\Main\Parser::metric($project['URL']);
 		$result['GOOGLE_CLIENT'] = $project['GOOGLE_CLIENT'];
 		$result['YANDEX_CLIENT'] = $project['YANDEX_CLIENT'];
 	}

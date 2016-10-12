@@ -1,5 +1,5 @@
 <?
-namespace Local;
+namespace Local\System;
 
 /**
  * Class StaticCache Статическое кеширование

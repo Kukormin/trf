@@ -8,10 +8,10 @@ $onlyCheck = $_REQUEST['only_check'] == 'Y';
 
 $ex = false;
 
-$project = \Local\Project::getById($projectId);
+$project = \Local\Main\Project::getById($projectId);
 if ($project)
 {
-	$templs = \Local\Templ::getByProject($project['ID']);
+	$templs = \Local\Main\Templ::getByProject($project['ID']);
 	foreach ($templs as $templ)
 	{
 		if ($templ['ID'] == $templId)
@@ -44,13 +44,13 @@ if ($project)
 
 		if ($templId)
 		{
-			$templ = \Local\Templ::getById($templId, $project['ID']);
-			$templ = \Local\Templ::update($templ, $newTempl);
+			$templ = \Local\Main\Templ::getById($templId, $project['ID']);
+			$templ = \Local\Main\Templ::update($templ, $newTempl);
 		}
 		else
-			$templ = \Local\Templ::add($newTempl);
+			$templ = \Local\Main\Templ::add($newTempl);
 
-		$return['redirect'] = \Local\Templ::getListHref($project['ID']);
+		$return['redirect'] = \Local\Main\Templ::getListHref($project['ID']);
 	}
 }
 

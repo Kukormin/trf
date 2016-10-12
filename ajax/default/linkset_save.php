@@ -8,10 +8,10 @@ $onlyCheck = $_REQUEST['only_check'] == 'Y';
 
 $ex = false;
 
-$project = \Local\Project::getById($projectId);
+$project = \Local\Main\Project::getById($projectId);
 if ($project)
 {
-	$sets = \Local\Linkset::getByProject($project['ID']);
+	$sets = \Local\Main\Linkset::getByProject($project['ID']);
 	foreach ($sets as $set)
 	{
 		if ($set['ID'] == $setId)
@@ -49,13 +49,13 @@ if ($project)
 
 		if ($setId)
 		{
-			$set = \Local\Linkset::getById($setId, $project['ID']);
-			$set = \Local\Linkset::update($set, $newSet);
+			$set = \Local\Main\Linkset::getById($setId, $project['ID']);
+			$set = \Local\Main\Linkset::update($set, $newSet);
 		}
 		else
-			$set = \Local\Linkset::add($newSet);
+			$set = \Local\Main\Linkset::add($newSet);
 
-		$return['redirect'] = \Local\Linkset::getListHref($project['ID']);
+		$return['redirect'] = \Local\Main\Linkset::getListHref($project['ID']);
 	}
 }
 

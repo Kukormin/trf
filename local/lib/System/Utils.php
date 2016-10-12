@@ -1,5 +1,5 @@
 <?
-namespace Local;
+namespace Local\System;
 
 use Bitrix\Main\Loader;
 use Bitrix\Highloadblock\HighloadBlockTable;
@@ -13,12 +13,7 @@ class Utils
 	/**
 	 * Путь для кеширования
 	 */
-	const CACHE_PATH = 'Local/Utils/';
-
-	/**
-	 * Разделитель для формирования титла
-	 */
-	const TITLE_SEPARATOR = ' - ';
+	const CACHE_PATH = 'Local/System/Utils/';
 
 	/**
 	 * @var array HTTP статусы
@@ -32,23 +27,6 @@ class Utils
 		405 => 'Method Not Allowed',
 		500 => 'Internal Server Error',
 	);
-
-	/**
-	 * Формирует заголовок
-	 * @param $parts
-	 * @return string
-	 */
-	public static function getTitle($parts)
-	{
-		$s = '';
-		foreach ($parts as $part)
-		{
-			if ($s)
-				$s = self::TITLE_SEPARATOR . $s;
-			$s = $part . $s;
-		}
-		return $s;
-	}
 
 	/**
 	 * Возвращает HTTP статус по коду

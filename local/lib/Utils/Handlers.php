@@ -1,10 +1,13 @@
 <?
 
-namespace Local;
+namespace Local\Utils;
+
+use Local\System\UserTypeNYesNo;
+use Local\System\Utils;
 
 /**
  * Class Handlers Обработчики событий
- * @package Local\Common
+ * @package Local\Utils
  */
 class Handlers
 {

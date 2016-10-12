@@ -7,15 +7,16 @@ require('const.php');
 require('functions.php');
 
 // Библиотеки композера
-require($_SERVER['DOCUMENT_ROOT'] . '/local/vendor/autoload.php');
+require(dirname(__FILE__) . '/../vendor/autoload.php');
 
 // Обработчики событий
-\Local\Handlers::addEventHandlers();
+\Local\Utils\Handlers::addEventHandlers();
 
 // Модули битрикса
 \Bitrix\Main\Loader::IncludeModule('iblock');
 \Bitrix\Main\Loader::IncludeModule('highloadblock');
 
+/*
 // Adwords API
 define('SRC_PATH', $_SERVER['DOCUMENT_ROOT'] . '/local/vendor/googleads/googleads-php-lib/src/');
 define('LIB_PATH', 'Google/Api/Ads/AdWords/Lib');
@@ -31,4 +32,4 @@ ini_set('include_path', implode(array(
 
 // Include the AdWordsUser
 require_once LIB_PATH . '/AdWordsUser.php';
-//require_once dirname(__FILE__) . '/../../Common/ExampleUtils.php';
+//require_once dirname(__FILE__) . '/../../Common/ExampleUtils.php';*/

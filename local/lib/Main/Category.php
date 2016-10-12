@@ -1,8 +1,9 @@
 <?
-namespace Local;
+namespace Local\Main;
 
 use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Main\Entity\Query;
+use Local\System\ExtCache;
 
 /**
  * Категория - рекламируемая страница или группа страниц (карточки товаров)
@@ -12,7 +13,7 @@ class Category
 	/**
 	 * Путь для кеширования
 	 */
-	const CACHE_PATH = 'Local/Category/';
+	const CACHE_PATH = 'Local/Main/Category/';
 
 	/**
 	 * ID HL-блока с категориями

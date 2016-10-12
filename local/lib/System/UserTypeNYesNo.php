@@ -1,6 +1,6 @@
 <?
 
-namespace Local;
+namespace Local\System;
 
 /**
  * Юзертайп "Да/Нет" - (базовый тип - N)

@@ -2,19 +2,20 @@
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)
 	die();
 
-/** @var int $projectId */
-/** @var array $project */
-/** @var int $categoryId */
-/** @var array $category */
-/** @var string $tabCode */
-/** @var array $titleParts */
+/** @var Components\Navigaton $component */
 
-if ($categoryId == 'new') {
+$projectId = $component->projectId;
+$project = $component->project;
+$tabCode = $component->tabCode;
+$category = $component->category;
+$categoryId = intval($category['ID']);
+
+if (!$categoryId) {
 	$tabs = array(
 		'settings' => 'Настройки',
 	);
 	$tabCode = 'settings';
-	$categoryHref = \Local\Category::getNewHref($projectId);
+	$categoryHref = \Local\Main\Category::getNewHref($projectId);
 }
 else
 {
@@ -28,8 +29,8 @@ else
 	);
 	if (!$tabs[$tabCode])
 		$tabCode = 'main';
-	$titleParts[] = $tabs[$tabCode];
-	$categoryHref = \Local\Category::getHref($category);
+	$categoryHref = \Local\Main\Category::getHref($category);
+	$component->addNav('', $tabs[$tabCode], false, true);
 }
 
 //
@@ -44,7 +45,7 @@ else
 		if ($code == $tabCode)
 			$class = ' class="active"';
 		$href = $categoryHref;
-		if ($code != 'main' && $categoryId != 'new')
+		if ($code != 'main' && $categoryId)
 			$href .= $code . '/';
 		?>
 		<li<?= $class?>><a data-id="#<?= $code ?>" href="<?= $href ?>"><?= $name ?></a></li><?
@@ -67,10 +68,10 @@ foreach ($tabs as $code => $name)
 	//
 	if ($code == 'main')
 	{
-		$filters = \Local\Keygroup::getFilters();
+		$filters = \Local\Main\Keygroup::getFilters();
 		?>
-		<div class="row">
-		<div class="span3">
+		<div class="row-fluid">
+		<div class="span2">
 			<form id="keygroup-form">
 				<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
 				<input type="hidden" name="cid" value="<?= $category['ID'] ?>" />
@@ -120,17 +121,17 @@ foreach ($tabs as $code => $name)
 				</p>
 			</form>
 		</div>
-		<div class="span9">
+		<div class="span10">
 			<div class="navbar">
 				<div class="navbar-inner">
-					<ul class="nav">
+					<ul class="nav" id="multi-nav">
 						<li>
 							<i class="help" data-placement="bottom" data-original-title="Массовые операции"
 							   data-content="Подсказа по массовым оперциям и инверсии напр."></i>
 						</li>
 						<li class="dropdown">
 							<a class="dropdown-toggle" data-toggle="dropdown" href="#">
-								Выбрано: <span id="selected_count">0</span>
+								Выбрано: <span id="selected_count">0</span> из <span id="all_count">0</span>
 								<b class="caret"></b>
 							</a>
 							<ul class="dropdown-menu">
@@ -145,7 +146,7 @@ foreach ($tabs as $code => $name)
 								</li>
 							</ul>
 						</li>
-						<li class="dropdown">
+						<li class="dropdown hidden" id="multi-action">
 							<a class="dropdown-toggle" data-toggle="dropdown" href="#">
 								Действие с выбранными:
 								<b class="caret"></b>
@@ -153,16 +154,39 @@ foreach ($tabs as $code => $name)
 							<ul class="dropdown-menu">
 								<li>
 									<a id="update_ws" href="javascript:void(0)">Обновить частотность</a>
+								</li><?
+
+								if (\Local\Main\Mark::isNotEmpty())
+								{
+									?>
+									<li class="divider"></li>
+									<li class="dropdown-submenu add_mark">
+										<a href="javascript:void(0)">Добавить метку</a>
+										<? \Local\Main\Mark::printDropdown() ?>
+									</li>
+									<li class="dropdown-submenu remove_mark">
+										<a href="javascript:void(0)">Удалить метку</a>
+										<? \Local\Main\Mark::printDropdown() ?>
+									</li>
+									<li class="remove_all_mark">
+										<a href="javascript:void(0)">Удалить все метки</a>
+									</li><?
+								}
+								?>
+								<li class="divider"></li>
+								<li class="dropdown-submenu add_templ">
+									<a href="javascript:void(0)">Прикрепить шаблон</a>
+									<? \Local\Main\Templ::printDropdown($project['ID']) ?>
 								</li>
-								<li>
-									<a id="add_mark" href="javascript:void(0)">Добавить метку...</a>
+								<li class="dropdown-submenu remove_templ">
+									<a href="javascript:void(0)">Удалить шаблон</a>
+									<? \Local\Main\Templ::printDropdown($project['ID']) ?>
 								</li>
-								<li>
-									<a id="add_template" href="javascript:void(0)">Прикрепить шаблон...</a>
+								<li class="remove_all_templ">
+									<a href="javascript:void(0)">Удалить все шаблоны</a>
 								</li>
-								<li>
-									<a id="remove_template" href="javascript:void(0)">
-										Удалить объявления для шаблона...</a>
+								<li class="remove_all_manual_ad">
+									<a href="javascript:void(0)">Удалить все объявления, добавленные вручную</a>
 								</li>
 							</ul>
 						</li>
@@ -406,5 +430,5 @@ foreach ($tabs as $code => $name)
 ?>
 <script type="text/javascript">
 	siteOptions.categoryPage = true;
-	siteOptions.keygroupFilters = <?= $categoryId == 'new' ? 'false' : 'true' ?>;
+	siteOptions.keygroupFilters = <?= $categoryId ? 'true' : 'false' ?>;
 </script><?

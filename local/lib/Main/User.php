@@ -1,10 +1,10 @@
 <?
-namespace Local;
+namespace Local\Main;
 
 /**
  * Дополнительные методы для работы с пользователем битрикса
  */
-class ExtUser
+class User
 {
 	const INTERFACE_SIMPLE = 1;
 	const INTERFACE_EXTENDED = 2;

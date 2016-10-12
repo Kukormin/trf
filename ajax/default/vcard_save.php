@@ -8,10 +8,10 @@ $onlyCheck = $_REQUEST['only_check'] == 'Y';
 
 $ex = false;
 
-$project = \Local\Project::getById($projectId);
+$project = \Local\Main\Project::getById($projectId);
 if ($project)
 {
-	$cards = \Local\Vcard::getByProject($project['ID']);
+	$cards = \Local\Main\Vcard::getByProject($project['ID']);
 	foreach ($cards as $card)
 	{
 		if ($card['ID'] == $cardId)
@@ -36,13 +36,13 @@ if ($project)
 		);
 		if ($cardId)
 		{
-			$card = \Local\Vcard::getById($cardId, $project['ID']);
-			$card = \Local\Vcard::update($card, $newCard);
+			$card = \Local\Main\Vcard::getById($cardId, $project['ID']);
+			$card = \Local\Main\Vcard::update($card, $newCard);
 		}
 		else
-			$card = \Local\Vcard::add($newCard);
+			$card = \Local\Main\Vcard::add($newCard);
 
-		$return['redirect'] = \Local\Vcard::getListHref($project['ID']);
+		$return['redirect'] = \Local\Main\Vcard::getListHref($project['ID']);
 	}
 }
 

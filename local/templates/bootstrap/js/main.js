@@ -134,13 +134,17 @@ var CMN = {
 			if (post)
 				post += '&';
 			post += 'action=' + action;
-			if (addParams)
-				post += '&' + addParams;
+		}
+		if (addParams) {
+			if (post)
+				post += '&';
+			post += addParams;
 		}
 
 		var alerts = form.find('.alerts');
 		var endless = false;
-		var useOverlay = form.data('overlay') && addParams.indexOf('only_check=Y') < 0;
+		var check = addParams && addParams.indexOf('only_check=Y') >= 0;
+		var useOverlay = form.data('overlay') && !check;
 		if (useOverlay)
 			CMN.showOverlay();
 
@@ -152,6 +156,10 @@ var CMN = {
 				BS.showAlert(alerts, 'Неизвестная ошибка. Обратитесь в службу поддержки', 'error');
 			},
 			success: function (data) {
+				if (data.endless) {
+					endless = true;
+				}
+
 				if (quick) {
 					if (successCallback)
 						successCallback(data);
@@ -221,6 +229,16 @@ var CMN = {
 		var ar = value.split('.');
 		var l = ar.length;
 		return l > 1 && ar[l - 1].length > 1;
+	},
+	historyBack: function() {
+		history.back();
+		// history.back() - непонятно есть ли страница раньше в истории
+		// а если вызывать назад по хлебным крошкам сразу, то back не срабатывает
+		setTimeout(CMN.breadCrumbBack, 100);
+		return false;
+	},
+	breadCrumbBack: function() {
+		location.href = $('.breadcrumb a:last').attr('href');
 	}
 };
 
@@ -230,7 +248,7 @@ var BS = {
 		// Выпадающие списки
 		$('.dropdown-toggle').dropdown();
 		// Всплывашки на "вопросиках"
-		$('i.help').popover();
+		$('i.help').popover({trigger: 'hover'});
 	},
 	showAlert: function(cont, html, style) {
 		if (cont.length && html) {
@@ -242,6 +260,42 @@ var BS = {
 		}
 	}
 };
+
+if (siteOptions.indexPage) {
+	var Marks = {
+		form: false,
+		rowsDiv: false,
+		addRowBtn: false,
+		saveBtn: false,
+		init: function () {
+			this.form = $('#mark-form');
+			this.rowsDiv = this.form.find('.rows');
+			this.addRowBtn = this.form.find('.add-row');
+			this.saveBtn = this.form.find('.btn-primary');
+
+			this.addRowBtn.click(this.addRow);
+			this.saveBtn.click(this.save);
+			this.form.on('input', '.color', this.changeColor);
+		},
+		addRow: function() {
+			var html = '<div class="control-group"><input type="text" placeholder="Название" name="mark[]" />' +
+						' #<input type="text" class="color" placeholder="Код цвета" name="color[]" /> <i class="mark"></i></div>';
+			Marks.rowsDiv.append(html);
+		},
+		changeColor: function() {
+			var col = $(this).val();
+			if (col.substr(0, 1) == '#')
+				col = col.substr(1);
+			col = col ? ('#' + col) : 'none';
+			var i = $(this).siblings('i');
+			i.css('background', col);
+		},
+		save: function() {
+			CMN.ajax(Marks.form, 'mark_save');
+			return false;
+		}
+	};
+}
 
 if (siteOptions.projectPage) {
 	var ProjectPage = {
@@ -617,62 +671,176 @@ if (siteOptions.categoryPage) {
 }
 
 if (siteOptions.keygroupFilters) {
-	var KeyGroup = {
+	var KeyGroupList = {
 		filtersForm: false,
 		btnApply: false,
 		pageInput: false,
 		resultCont: false,
+		multiNav: false,
+		selectedCount: 0,
+		countSpan: false,
+		allCountSpan: false,
+		multiAction: false,
+		thisPage: false,
+		allPage: false,
+		togglePage: false,
+		selectInputs: false,
+		table: false,
+		allPageChecked: false,
 		init: function () {
 			this.filtersForm = $('#keygroup-form');
 			this.btnApply = this.filtersForm.find('.btn-primary');
 			this.pageInput = this.filtersForm.find('input[name="page"]');
 			this.resultCont = $('#keygroup-table');
+			this.multiNav = $('#multi-nav');
+			this.countSpan = this.multiNav.find('#selected_count');
+			this.allCountSpan = this.multiNav.find('#all_count');
+			this.multiAction = this.multiNav.find('#multi-action');
+			this.thisPage = this.multiNav.find('#this_page');
+			this.allPage = this.multiNav.find('#all_page');
+			this.togglePage = this.multiNav.find('#toggle_page');
 
 			this.btnApply.click(this.applyFilters);
+			this.thisPage.click(this.selectThisPage);
+			this.allPage.click(this.selectAllPage);
+			this.togglePage.click(this.toggleThisPage);
 			this.resultCont.on('click', '.pagination a', this.toPage);
+			this.resultCont.on('click', '.select_item', this.selectItem);
+			this.multiNav.on('click', 'li.add_mark > ul a', this.addMark);
+			this.multiNav.on('click', 'li.remove_mark > ul a', this.removeMark);
+			this.multiNav.on('click', 'li.remove_all_mark > a', this.removeAllMark);
 
 			this.getKeyGroups();
 		},
 		applyFilters: function () {
-			KeyGroup.pageInput.val(1);
-			KeyGroup.getKeyGroups();
+			KeyGroupList.pageInput.val(1);
+			KeyGroupList.getKeyGroups();
 			return false;
 		},
-		getKeyGroups: function () {
-			CMN.ajax(KeyGroup.filtersForm, 'get_keygroups_by_filter', '', function (data) {
-				KeyGroup.resultCont.html(data);
+		getKeyGroups: function (addParam, groupAction) {
+			if (groupAction) {
+				var ids = '';
+				if (KeyGroupList.allPageChecked)
+					ids = 'all';
+				else
+					KeyGroupList.selectInputs.filter(':checked').each(function () {
+						if (ids)
+							ids += ',';
+						ids += $(this).attr('id');
+					});
+				addParam += '&ids=' + ids;
+			}
+			KeyGroupList.resultCont.addClass('process');
+			KeyGroupList.resultCont.removeClass('long');
+			setTimeout(KeyGroupList.showOverlay, 200);
+			CMN.ajax(KeyGroupList.filtersForm, 'get_keygroups_by_filter', addParam, function (data) {
+				KeyGroupList.resultCont.removeClass('process');
+				KeyGroupList.resultCont.html(data);
+				KeyGroupList.table = KeyGroupList.resultCont.find('table');
+				KeyGroupList.selectInputs = KeyGroupList.table.find('input.select_item');
+				KeyGroupList.allCountSpan.text(KeyGroupList.table.data('all'));
+				if (!groupAction)
+					KeyGroupList.allPageChecked = false;
+				KeyGroupList.calcSelected();
 			}, true);
+		},
+		showOverlay: function() {
+			KeyGroupList.resultCont.addClass('long');
 		},
 		toPage: function () {
 			var page = $(this).data('page');
 			if (page) {
-				KeyGroup.pageInput.val(page);
-				KeyGroup.getKeyGroups();
+				KeyGroupList.pageInput.val(page);
+				KeyGroupList.getKeyGroups();
 			}
 			return false;
+		},
+		calcSelected: function() {
+			if (KeyGroupList.allPageChecked)
+				KeyGroupList.selectedCount = KeyGroupList.table.data('all');
+			else
+				KeyGroupList.selectedCount = KeyGroupList.selectInputs.filter(':checked').length;
+			KeyGroupList.countSpan.text(KeyGroupList.selectedCount);
+			if (KeyGroupList.selectedCount > 0)
+				KeyGroupList.multiAction.removeClass('hidden');
+			else
+				KeyGroupList.multiAction.addClass('hidden');
+		},
+		selectItem: function () {
+			KeyGroupList.allPageChecked = false;
+			KeyGroupList.calcSelected();
+		},
+		selectThisPage: function () {
+			KeyGroupList.allPageChecked = false;
+			KeyGroupList.selectInputs.prop('checked', true);
+			KeyGroupList.calcSelected();
+		},
+		selectAllPage: function () {
+			KeyGroupList.allPageChecked = true;
+			KeyGroupList.selectInputs.prop('checked', true);
+			KeyGroupList.calcSelected();
+		},
+		toggleThisPage: function () {
+			KeyGroupList.allPageChecked = false;
+			var selected = KeyGroupList.selectInputs.filter(':checked');
+			var empty = KeyGroupList.selectInputs.not(':checked');
+			selected.prop('checked', false);
+			empty.prop('checked', true);
+			KeyGroupList.calcSelected();
+		},
+		addMark: function () {
+			var markId = $(this).data('id');
+			var addParam = 'action=add_mark&add_mark=' + markId;
+			KeyGroupList.getKeyGroups(addParam, true);
+		},
+		removeMark: function () {
+			var markId = $(this).data('id');
+			var addParam = 'action=remove_mark&add_mark=' + markId;
+			KeyGroupList.getKeyGroups(addParam, true);
+		},
+		removeAllMark: function () {
+			var addParam = 'action=remove_all_mark';
+			KeyGroupList.getKeyGroups(addParam, true);
 		}
 	};
 }
 
 if (siteOptions.linksetPage) {
 	var Linkset = {
-		detail: false,
 		form: false,
 		btnSave: false,
+		btnCancel: false,
 		nameInput: false,
 		nameControlGroup: false,
 		nameHelp: false,
 		name: '',
 		nameTimerId: 0,
+		current: false,
+		urlTimerId: 0,
+		titles: false,
+		hrefs: false,
+		rules: false,
+		nameError: false,
+		linksError: false,
+		projectUrl: '',
 		init: function () {
 			this.form = $('#linkset_detail');
 			this.btnSave = this.form.find('.btn-primary');
+			this.btnCancel = this.form.find('.cancel');
 			this.nameInput = this.form.find('#name');
 			this.nameControlGroup = this.nameInput.closest('.control-group');
 			this.nameHelp = this.nameControlGroup.find('.help-inline');
+			this.titles = this.form.find('input[name="title[]"]');
+			this.hrefs = this.form.find('input[name="href[]"]');
+			this.rules = this.form.find('.rules li');
+			this.projectUrl = this.form.find('input[name="project_url"]').val();
 			this.initCheck();
+			this.checkLinks();
 			this.nameInput.on('input', this.checkName);
+			this.titles.on('input', this.checkTitle);
+			this.hrefs.on('input', this.checkHref);
 			this.btnSave.click(this.saveSettings);
+			this.btnCancel.click(CMN.historyBack);
 		},
 		initCheck: function() {
 			this.name = this.nameInput.val();
@@ -690,14 +858,120 @@ if (siteOptions.linksetPage) {
 			if (Linkset.name) {
 				Linkset.nameControlGroup.removeClass('error');
 				Linkset.nameHelp.text('');
-				Linkset.btnSave.prop('disabled', false);
 				Linkset.nameTimerId = setTimeout(Linkset.saveSettingsAjax, 500);
+				Linkset.nameError = false;
 			}
 			else {
 				Linkset.nameControlGroup.addClass('error');
 				Linkset.nameHelp.text('Введите название');
-				Linkset.btnSave.prop('disabled', true);
+				Linkset.nameError = true;
 			}
+			Linkset.btnDisabled();
+		},
+		checkTitle: function() {
+			var val = $(this).val();
+			var id = $(this).attr('id').substr(4);
+			var div = $('#yandex' + id);
+			var a = div.children('a');
+			a.text(val);
+			if (val)
+				div.removeClass('hidden');
+			else
+				div.addClass('hidden');
+			Linkset.checkLinks();
+		},
+		checkHref: function() {
+			var id = $(this).attr('id').substr(4);
+			var a = $('#yandex' + id + ' a');
+			var href = 'http://' + Linkset.projectUrl + $(this).val();
+			a.attr('href', href);
+			if (Linkset.urlTimerId)
+				clearTimeout(Linkset.urlTimerId);
+			Linkset.current = $(this).closest('.link-item');
+			Linkset.urlTimerId = setTimeout(Linkset.getSite(), 500);
+			Linkset.checkLinks();
+		},
+		getSite: function() {
+			Linkset.current.find('.loader').addClass('inp');
+			var href = Linkset.current.find('input[name="href[]"]').val();
+			var info = Linkset.current.find('.info');
+			info.text('');
+			var url = Linkset.projectUrl + href;
+			CMN.ajax(Linkset.current, 'get_site', 'url=' + url, function(data) {
+				info.text(data.error);
+			});
+		},
+		checkLinks: function() {
+			var r1 = true;
+			var r2 = false;
+			var r3 = 0;
+			var r4 = false;
+			var r5 = false;
+			var r6 = false;
+			Linkset.titles.removeClass('error');
+			Linkset.hrefs.removeClass('error');
+			Linkset.rules.removeClass('text-error');
+			for (var i = 0; i < 4; i++) {
+				var cur = Linkset.titles.eq(i);
+				var curHref = Linkset.hrefs.eq(i);
+				var val = cur.val();
+				if (val) {
+					r1 = false;
+					var l = val.length;
+					if (l > 30) {
+						r2 = true;
+						cur.addClass('error');
+					}
+					r3 += l;
+					var href = curHref.val();
+					if (!href || href == '/') {
+						curHref.addClass('error');
+						r6 = true;
+					}
+					for (var j = i + 1; j < 4; j++) {
+						var that = Linkset.titles.eq(j);
+						if (that.val() == val) {
+							r5 = true;
+							cur.addClass('error');
+							that.addClass('error');
+						}
+						if (href) {
+							var thatHref = Linkset.hrefs.eq(j);
+							if (thatHref.val() == href) {
+								r4 = true;
+								curHref.addClass('error');
+								thatHref.addClass('error');
+							}
+						}
+					}
+				}
+			}
+			if (r1) {
+				Linkset.rules.eq(0).addClass('text-error');
+				Linkset.titles.addClass('error');
+			}
+			if (r5) {
+				Linkset.rules.eq(1).addClass('text-error');
+			}
+			if (r2) {
+				Linkset.rules.eq(2).addClass('text-error');
+			}
+			if (r3 > 66) {
+				Linkset.rules.eq(3).addClass('text-error');
+				Linkset.titles.addClass('error');
+			}
+			if (r6) {
+				Linkset.rules.eq(4).addClass('text-error');
+			}
+			if (r4) {
+				Linkset.rules.eq(5).addClass('text-error');
+			}
+
+			Linkset.linksError = r1 || r2 || r3 > 66 || r4 || r5 || r6;
+			Linkset.btnDisabled();
+		},
+		btnDisabled: function() {
+			Linkset.btnSave.prop('disabled', Linkset.linksError || Linkset.nameError);
 		},
 		saveSettingsAjax: function (save) {
 			var addParams = '';
@@ -707,14 +981,15 @@ if (siteOptions.linksetPage) {
 				if (data.EX) {
 					Linkset.nameControlGroup.addClass('error');
 					Linkset.nameHelp.text('Набор с таким именем уже существует');
-					Linkset.btnSave.prop('disabled', true);
+					Linkset.nameError = true;
 				}
 				else {
 					Linkset.nameControlGroup.removeClass('error');
 					Linkset.nameHelp.text('');
 					Linkset.btnSave.prop('disabled', false);
-
+					Linkset.nameError = false;
 				}
+				Linkset.btnDisabled();
 			});
 		},
 		saveSettings: function () {
@@ -730,9 +1005,9 @@ if (siteOptions.linksetPage) {
 
 if (siteOptions.vcardPage) {
 	var Vcard = {
-		detail: false,
 		form: false,
 		btnSave: false,
+		btnCancel: false,
 		nameInput: false,
 		nameControlGroup: false,
 		nameHelp: false,
@@ -741,12 +1016,14 @@ if (siteOptions.vcardPage) {
 		init: function () {
 			this.form = $('#vcard_detail');
 			this.btnSave = this.form.find('.btn-primary');
+			this.btnCancel = this.form.find('.cancel');
 			this.nameInput = this.form.find('#name');
 			this.nameControlGroup = this.nameInput.closest('.control-group');
 			this.nameHelp = this.nameControlGroup.find('.help-inline');
 			this.initCheck();
 			this.nameInput.on('input', this.checkName);
 			this.btnSave.click(this.saveSettings);
+			this.btnCancel.click(CMN.historyBack);
 		},
 		initCheck: function() {
 			this.name = this.nameInput.val();
@@ -804,9 +1081,9 @@ if (siteOptions.vcardPage) {
 
 if (siteOptions.templPage) {
 	var Templ = {
-		detail: false,
 		form: false,
 		btnSave: false,
+		btnCancel: false,
 		nameInput: false,
 		nameControlGroup: false,
 		nameHelp: false,
@@ -815,12 +1092,14 @@ if (siteOptions.templPage) {
 		init: function () {
 			this.form = $('#templ_detail');
 			this.btnSave = this.form.find('.btn-primary');
+			this.btnCancel = this.form.find('.cancel');
 			this.nameInput = this.form.find('#name');
 			this.nameControlGroup = this.nameInput.closest('.control-group');
 			this.nameHelp = this.nameControlGroup.find('.help-inline');
 			this.initCheck();
 			this.nameInput.on('input', this.checkName);
 			this.btnSave.click(this.saveSettings);
+			this.btnCancel.click(CMN.historyBack);
 		},
 		initCheck: function() {
 			this.name = this.nameInput.val();
@@ -876,6 +1155,28 @@ if (siteOptions.templPage) {
 	};
 }
 
+if (siteOptions.keygroupPage) {
+	var KeyGroup = {
+		form: false,
+		btnSave: false,
+		btnCancel: false,
+		init: function () {
+			this.form = $('#keygroup_detail');
+			this.btnSave = this.form.find('.btn-primary');
+			this.btnCancel = this.form.find('.cancel');
+			this.btnSave.click(this.saveSettings);
+			this.btnCancel.click(CMN.historyBack);
+		},
+		saveSettingsAjax: function () {
+			CMN.ajax(KeyGroup.form, 'keygroup_save', '', CMN.historyBack);
+		},
+		saveSettings: function () {
+			KeyGroup.saveSettingsAjax();
+			return false;
+		}
+	};
+}
+
 /**
  * При загрузке страницы
  */
@@ -894,6 +1195,11 @@ $(document).ready(function() {
 	// Общее
 	CMN.init();
 
+	// Главная страница
+	if (siteOptions.indexPage) {
+		Marks.init();
+	}
+
 	// Страница проекта
 	if (siteOptions.projectPage) {
 		ProjectPage.init();
@@ -907,7 +1213,7 @@ $(document).ready(function() {
 
 	// Список ключевых групп с фильтрами
 	if (siteOptions.keygroupFilters) {
-		KeyGroup.init();
+		KeyGroupList.init();
 	}
 
 	// Страница быстрых ссылок
@@ -923,6 +1229,11 @@ $(document).ready(function() {
 	// Страница шаблонов объявлений
 	if (siteOptions.templPage) {
 		Templ.init();
+	}
+
+	// Страница ключевых фраз
+	if (siteOptions.keygroupPage) {
+		KeyGroup.init();
 	}
 
 });

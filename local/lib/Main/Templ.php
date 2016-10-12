@@ -1,27 +1,28 @@
 <?
-namespace Local;
+namespace Local\Main;
 
 use Bitrix\Highloadblock\HighloadBlockTable;
+use Local\System\ExtCache;
 
 /**
- * Виртуальные визитки
+ * Шаблоны объявлений
  */
-class Vcard
+class Templ
 {
 	/**
 	 * Путь для кеширования
 	 */
-	const CACHE_PATH = 'Local/Vcard/';
+	const CACHE_PATH = 'Local/Main/Template/';
 
 	/**
 	 * ID HL-блока
 	 */
-	const ENTITY_ID = 6;
+	const ENTITY_ID = 7;
 
 	/**
 	 * Ключ в урле
 	 */
-	const URL = 'vcards';
+	const URL = 'templates';
 
 	public static function getByProject($projectId, $refreshCache = false)
 	{
@@ -84,18 +85,18 @@ class Vcard
 		return self::getListHref($projectId) . 'new/';
 	}
 
-	public static function getHref($card)
+	public static function getHref($templ)
 	{
-		return self::getListHref($card['PROJECT']) . $card['ID'] . '/';
+		return self::getListHref($templ['PROJECT']) . $templ['ID'] . '/';
 	}
 
-	public static function add($newCard)
+	public static function add($newTempl)
 	{
-		$projectId = $newCard['PROJECT'];
+		$projectId = $newTempl['PROJECT'];
 		$data = array();
-		$data['UF_NAME'] = $newCard['NAME'];
+		$data['UF_NAME'] = $newTempl['NAME'];
 		$data['UF_PROJECT'] = $projectId;
-		$data['UF_DATA'] = json_encode($newCard['DATA'], JSON_UNESCAPED_UNICODE);
+		$data['UF_DATA'] = json_encode($newTempl['DATA'], JSON_UNESCAPED_UNICODE);
 
 		$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
 		$entity = HighloadBlockTable::compileEntity($entityInfo);
@@ -104,34 +105,34 @@ class Vcard
 		$id = $result->getId();
 
 		self::getByProject($projectId, true);
-		$card = self::getById($id, $projectId);
-		$card['NEW'] = true;
-		return $card;
+		$template = self::getById($id, $projectId);
+		$template['NEW'] = true;
+		return $template;
 	}
 
-	public static function delete($card)
+	public static function delete($templ)
 	{
 		$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
 		$entity = HighloadBlockTable::compileEntity($entityInfo);
 		$dataClass = $entity->getDataClass();
-		$dataClass::delete($card['ID']);
+		$dataClass::delete($templ['ID']);
 
-		self::getByProject($card['PROJECT'], true);
+		self::getByProject($templ['PROJECT'], true);
 	}
 
-	public static function update($card, $newSet)
+	public static function update($templ, $newTempl)
 	{
 		$update = array();
-		if (isset($newSet['NAME']) && $newSet['NAME'] != $card['NAME'])
-			$update['UF_NAME'] = $newSet['NAME'];
-		if ($newSet['DATA'])
+		if (isset($newTempl['NAME']) && $newTempl['NAME'] != $templ['NAME'])
+			$update['UF_NAME'] = $newTempl['NAME'];
+		if ($newTempl['DATA'])
 		{
-			$newData = $card['DATA'];
-			foreach ($newSet['DATA'] as $key => $value)
+			$newData = $templ['DATA'];
+			foreach ($newTempl['DATA'] as $key => $value)
 				$newData[$key] = $value;
 
 			$encoded = json_encode($newData, JSON_UNESCAPED_UNICODE);
-			if ($card['DATA_ORIG'] != $encoded)
+			if ($templ['DATA_ORIG'] != $encoded)
 				$update['UF_DATA'] = $encoded;
 		}
 
@@ -140,14 +141,28 @@ class Vcard
 			$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
 			$entity = HighloadBlockTable::compileEntity($entityInfo);
 			$dataClass = $entity->getDataClass();
-			$dataClass::update($card['ID'], $update);
+			$dataClass::update($templ['ID'], $update);
 
-			self::getByProject($card['PROJECT'], true);
-			$card = self::getById($card['ID'], $card['PROJECT']);
-			$card['UPDATED'] = true;
+			self::getByProject($templ['PROJECT'], true);
+			$templ = self::getById($templ['ID'], $templ['PROJECT']);
+			$templ['UPDATED'] = true;
 		}
 
-		return $card;
+		return $templ;
+	}
+
+	public static function printDropdown($projectId)
+	{
+		?>
+		<ul class="dropdown-menu"><?
+		$items = self::getByProject($projectId);
+		foreach ($items as $item)
+		{
+			?>
+			<li><a data-id="<?= $item['ID'] ?>" href="javascript:void(0)"><?= $item['NAME'] ?></a></li><?
+		}
+		?>
+		</ul><?
 	}
 
 }

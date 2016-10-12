@@ -1,9 +1,9 @@
 <?
-namespace Local;
+namespace Local\Main;
 
 use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Main\Entity\ExpressionField;
-use Bitrix\Main\Entity\Query;
+use Local\System\ExtCache;
 
 /**
  * Группа, содержащая ключевое слово и от одного до нескольких объявлений
@@ -13,7 +13,7 @@ class Keygroup
 	/**
 	 * Путь для кеширования
 	 */
-	const CACHE_PATH = 'Local/Keygroup/';
+	const CACHE_PATH = 'Local/Main/Keygroup/';
 
 	/**
 	 * ID HL-блока
@@ -24,6 +24,11 @@ class Keygroup
 	 * сколько секунд фраза считается новой
 	 */
 	const NEW_TS = 7200;
+
+	/**
+	 * Ключ в урле
+	 */
+	const URL = 'kg';
 
 	/**
 	 * @var array настройки панели фильтров
@@ -89,17 +94,13 @@ class Keygroup
 			    '5' => '>=4',
 			    '6' => '>=5',
 		    ),
-		    'VALUE' => array(),
-	    ),
-	    'target' => array(
-		    'NAME' => 'Целевая',
-		    'TYPE' => 'radio',
-		    'VARS' => array(
-			    '0' => 'не важно',
-			    '1' => 'целевая',
-			    '2' => 'околоцелевая',
-		    ),
 		    'VALUE' => '0',
+	    ),
+	    'mark' => array(
+		    'NAME' => 'Метки',
+		    'TYPE' => 'checkbox',
+		    'VARS' => array(),
+		    'VALUE' => array(),
 	    ),
 	    'sort' => array(
 		    'NAME' => 'Сортировать:',
@@ -137,6 +138,12 @@ class Keygroup
 			}
 			elseif ($item['TYPE'] == 'checkbox')
 			{
+				if ($code == 'mark')
+				{
+					$marks = Mark::getByCurrentUser();
+					foreach ($marks as $mark)
+						$item['VARS'][$mark['ID']] = $mark['NAME'] . ' ' . $mark['HTML'];
+				}
 				foreach ($item['VARS'] as $k => $v)
 				{
 					if (in_array($k, $_REQUEST[$code]))
@@ -183,7 +190,7 @@ class Keygroup
 		elseif ($filters['new']['VALUE'] == 2)
 			$filter['<UF_TS'] = $ts - self::NEW_TS;
 
-		if (!$filters['base']['VALUE'][1] || !$filters['base']['VALUE'][2] || !$filters['base']['VALUE'][3])
+		if ($filters['base']['VALUE'])
 		{
 			if ($filters['base']['VALUE'][1] && $filters['base']['VALUE'][2])
 				$filter['!UF_BASE'] = -1;
@@ -199,6 +206,9 @@ class Keygroup
 				$filter['=UF_BASE'] = -1;
 		}
 
+		if ($filters['mark']['VALUE'])
+			$filter['=UF_MARK'] = array_keys($filters['mark']['VALUE']);
+
 		if ($filters['base_count']['VALUE'] == 1)
 			$filter['<=UF_BASE_COL_COUNT'] = 3;
 		elseif ($filters['base_count']['VALUE'] == 2)
@@ -211,11 +221,6 @@ class Keygroup
 			$filter['>=UF_BASE_COL_COUNT'] = 4;
 		elseif ($filters['base_count']['VALUE'] == 6)
 			$filter['>=UF_BASE_COL_COUNT'] = 5;
-
-		if ($filters['target']['VALUE'] == 1)
-			$filter['=UF_TARGET'] = 1;
-		elseif ($filters['target']['VALUE'] == 2)
-			$filter['!=UF_TARGET'] = 1;
 
 		if ($filters['sort']['VALUE'] == 'ida')
 			$order['ID'] = 'ASC';
@@ -294,27 +299,38 @@ class Keygroup
 					'CATEGORY' => $item['UF_CATEGORY'],
 					'BASE' => $item['UF_BASE'],
 					'BASE_COL_COUNT' => $item['UF_BASE_COL_COUNT'],
-					'TARGET' => $item['UF_TARGET'],
 					'TS' => $item['UF_TS'],
 					'AD_COUNT' => $item['UF_AD_COUNT'],
 					'WORDSTAT' => $item['UF_WORDSTAT'],
 					'WORDSTAT_TS' => $item['UF_WORDSTAT_TS'],
+					'MARKS' => $item['UF_MARK'],
+					'TEMPLATES' => $item['UF_TEMPLATE'],
 					'DATA_ORIG' => $item['UF_DATA'],
 					'DATA' => json_decode($item['UF_DATA'], true),
 				);
 			}
 
-			$rsCount = $dataClass::getList([
-				'select' => array(new ExpressionField('CNT', 'COUNT(*)')),
-				'filter' => $params['filter'],
-			]);
-			$itemsCount = $rsCount->fetch()['CNT'];
-			$return['NAV'] = array(
-				'ITEMS_COUNT' => $itemsCount,
-				'CURRENT_PAGE' => $page > 1 ? $page : 1,
-				'PAGE_SIZE' => $params['limit'],
-			    'PAGE_COUNT' => ceil($itemsCount / $params['limit']),
-			);
+			if (!$params['limit'] || count($return['ITEMS']) < $params['limit'])
+			{
+				$return['NAV'] = array(
+					'ITEMS_COUNT' => count($return['ITEMS']),
+					'CURRENT_PAGE' => 1,
+					'PAGE_COUNT' => 1,
+				);
+			}
+			else
+			{
+				$rsCount = $dataClass::getList([
+					'select' => array(new ExpressionField('CNT', 'COUNT(*)')),
+					'filter' => $params['filter'],
+				]);
+				$itemsCount = $rsCount->fetch()['CNT'];
+				$return['NAV'] = array(
+					'ITEMS_COUNT' => $itemsCount,
+					'CURRENT_PAGE' => $page > 1 ? $page : 1,
+					'PAGE_COUNT' => ceil($itemsCount / $params['limit']),
+				);
+			}
 
 			$extCache->endDataCache($return);
 		}
@@ -322,10 +338,20 @@ class Keygroup
 		return $return;
 	}
 
-	public static function getById($id)
+	public static function getById($id, $categoryId, $projectId)
 	{
-		//$projects = self::getList(1);
-		return $projects[$id];
+		$res = self::getList($projectId, $categoryId, array(
+			'filter' => array(
+				'ID' => $id,
+			),
+		));
+		return $res['ITEMS'][$id];
+	}
+
+	public static function getHref($category, $keygroup)
+	{
+		$categoryHref = Category::getHref($category);
+		return $categoryHref . self::URL . '/' . $keygroup['ID'] . '/';
 	}
 
 	public static function add($projectId, $categoryId, $keyword, $base, $baseCount)
@@ -339,17 +365,12 @@ class Keygroup
 			'UF_CATEGORY' => $categoryId,
 			'UF_BASE' => $base,
 			'UF_BASE_COL_COUNT' => $baseCount,
-			'UF_TARGET' => 1,
 		    'UF_TS' => time(),
 		    'UF_AD_COUNT' => 0,
 		    'UF_WORDSTAT' => -1,
 		    'UF_WORDSTAT_TS' => 0,
 		    'UF_DATA' => '{}',
 		));
-	}
-
-	public static function delete($id)
-	{
 	}
 
 	public static function updateBase($keygroupId, $base, $baseCount)
@@ -361,6 +382,138 @@ class Keygroup
 			'UF_BASE' => $base,
 			'UF_BASE_COL_COUNT' => $baseCount,
 		));
+	}
+
+	public static function update($keygroup, $newKeygroup)
+	{
+		$update = array();
+		if (isset($newKeygroup['NAME']) && $newKeygroup['NAME'] != $keygroup['NAME'])
+			$update['UF_NAME'] = $newKeygroup['NAME'];
+
+		// Метки
+		if (isset($newKeygroup['MARKS']))
+		{
+			$ex = array();
+			$new = array();
+			$needUpdate = false;
+			foreach ($keygroup['MARKS'] as $mark)
+				$ex[$mark] = true;
+			foreach ($newKeygroup['MARKS'] as $mark)
+			{
+				$new[$mark] = true;
+				if ($ex[$mark])
+					unset($ex[$mark]);
+				else
+					$needUpdate = true;
+			}
+			if ($ex)
+				$needUpdate = true;
+
+			if ($needUpdate)
+				$update['UF_MARK'] = array_keys($new);
+		}
+		// Шаблоны
+		if (isset($newKeygroup['TEMPLATES']))
+		{
+			$ex = array();
+			$new = array();
+			$needUpdate = false;
+			foreach ($keygroup['TEMPLATES'] as $templ)
+				$ex[$templ] = true;
+			foreach ($newKeygroup['TEMPLATES'] as $templ)
+			{
+				$new[$templ] = true;
+				if ($ex[$templ])
+					unset($ex[$templ]);
+				else
+					$needUpdate = true;
+			}
+			if ($ex)
+				$needUpdate = true;
+
+			if ($needUpdate)
+				$update['UF_TEMPLATE'] = array_keys($new);
+		}
+		if ($newKeygroup['DATA'])
+		{
+			$newData = $keygroup['DATA'];
+			foreach ($newKeygroup['DATA'] as $key => $value)
+				$newData[$key] = $value;
+
+			$encoded = json_encode($newData, JSON_UNESCAPED_UNICODE);
+			if ($keygroup['DATA_ORIG'] != $encoded)
+				$update['UF_DATA'] = $encoded;
+		}
+
+		if ($update)
+		{
+			$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
+			$entity = HighloadBlockTable::compileEntity($entityInfo);
+			$dataClass = $entity->getDataClass();
+			$dataClass::update($keygroup['ID'], $update);
+
+			self::clearCache($keygroup['PROJECT'], $keygroup['CATEGORY']);
+			$keygroup = self::getById($keygroup['ID'], $keygroup['CATEGORY'], $keygroup['PROJECT']);
+			$keygroup['UPDATED'] = true;
+		}
+
+		return $keygroup;
+	}
+
+	public static function addMark($keygroup, $mark)
+	{
+		foreach ($keygroup['MARKS'] as $m)
+			if ($m == $mark)
+				return false;
+
+		$update['UF_MARK'] = $keygroup['MARKS'];
+		$update['UF_MARK'][] = $mark;
+
+		$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
+		$entity = HighloadBlockTable::compileEntity($entityInfo);
+		$dataClass = $entity->getDataClass();
+		$dataClass::update($keygroup['ID'], $update);
+
+		return true;
+	}
+
+	public static function removeMark($keygroup, $mark)
+	{
+		$newMarks = array();
+		$ex = false;
+		foreach ($keygroup['MARKS'] as $m)
+			if ($m != $mark)
+			{
+				$newMarks[] = $m;
+				$ex = true;
+			}
+
+		if (!$ex)
+			return false;
+
+		$update['UF_MARK'] = $newMarks;
+
+		$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
+		$entity = HighloadBlockTable::compileEntity($entityInfo);
+		$dataClass = $entity->getDataClass();
+		$dataClass::update($keygroup['ID'], $update);
+
+		return true;
+	}
+
+	public static function removeAllMark($keygroup)
+	{
+		if (!count($keygroup['MARKS']))
+			return false;
+
+		$update['UF_MARK'] = array();
+
+		$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
+		$entity = HighloadBlockTable::compileEntity($entityInfo);
+		$dataClass = $entity->getDataClass();
+		$dataClass::update($keygroup['ID'], $update);
+
+		return true;
 	}
 
 	/**

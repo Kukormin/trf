@@ -3,9 +3,9 @@ $return = array();
 
 $categoryId = intval($_REQUEST['cid']);
 $projectId = intval($_REQUEST['pid']);
-$campaign = \Local\Category::getById($categoryId, $projectId);
+$category = \Local\Main\Category::getById($categoryId, $projectId);
 
-if ($campaign)
+if ($category)
 {
 	$replace = array();
 	foreach ($_REQUEST['from'] as $i => $from)
@@ -19,9 +19,9 @@ if ($campaign)
 	$data = array(
 		'REPLACE' => $replace,
 	);
-	$campaign = \Local\Category::update($campaign, array('DATA' => $data));
+	$category = \Local\Main\Category::update($category, array('DATA' => $data));
 
-	if ($campaign['UPDATED'])
+	if ($category['UPDATED'])
 	{
 		$return['alerts'] = array(
 			array('<p>Успешно сохранено</p>', 'success'),

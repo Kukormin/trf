@@ -1,27 +1,28 @@
 <?
-namespace Local;
+namespace Local\Main;
 
 use Bitrix\Highloadblock\HighloadBlockTable;
+use Local\System\ExtCache;
 
 /**
- * Шаблоны объявлений
+ * Наборы быстрых ссылок
  */
-class Templ
+class Linkset
 {
 	/**
 	 * Путь для кеширования
 	 */
-	const CACHE_PATH = 'Local/Template/';
+	const CACHE_PATH = 'Local/Main/Linkset/';
 
 	/**
 	 * ID HL-блока
 	 */
-	const ENTITY_ID = 7;
+	const ENTITY_ID = 5;
 
 	/**
 	 * Ключ в урле
 	 */
-	const URL = 'templates';
+	const URL = 'links';
 
 	public static function getByProject($projectId, $refreshCache = false)
 	{
@@ -84,18 +85,18 @@ class Templ
 		return self::getListHref($projectId) . 'new/';
 	}
 
-	public static function getHref($templ)
+	public static function getHref($set)
 	{
-		return self::getListHref($templ['PROJECT']) . $templ['ID'] . '/';
+		return self::getListHref($set['PROJECT']) . $set['ID'] . '/';
 	}
 
-	public static function add($newTempl)
+	public static function add($newSet)
 	{
-		$projectId = $newTempl['PROJECT'];
+		$projectId = $newSet['PROJECT'];
 		$data = array();
-		$data['UF_NAME'] = $newTempl['NAME'];
+		$data['UF_NAME'] = $newSet['NAME'];
 		$data['UF_PROJECT'] = $projectId;
-		$data['UF_DATA'] = json_encode($newTempl['DATA'], JSON_UNESCAPED_UNICODE);
+		$data['UF_DATA'] = json_encode($newSet['DATA'], JSON_UNESCAPED_UNICODE);
 
 		$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
 		$entity = HighloadBlockTable::compileEntity($entityInfo);
@@ -104,34 +105,34 @@ class Templ
 		$id = $result->getId();
 
 		self::getByProject($projectId, true);
-		$template = self::getById($id, $projectId);
-		$template['NEW'] = true;
-		return $template;
+		$set = self::getById($id, $projectId);
+		$set['NEW'] = true;
+		return $set;
 	}
 
-	public static function delete($templ)
+	public static function delete($set)
 	{
 		$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
 		$entity = HighloadBlockTable::compileEntity($entityInfo);
 		$dataClass = $entity->getDataClass();
-		$dataClass::delete($templ['ID']);
+		$dataClass::delete($set['ID']);
 
-		self::getByProject($templ['PROJECT'], true);
+		self::getByProject($set['PROJECT'], true);
 	}
 
-	public static function update($templ, $newTempl)
+	public static function update($set, $newSet)
 	{
 		$update = array();
-		if (isset($newTempl['NAME']) && $newTempl['NAME'] != $templ['NAME'])
-			$update['UF_NAME'] = $newTempl['NAME'];
-		if ($newTempl['DATA'])
+		if (isset($newSet['NAME']) && $newSet['NAME'] != $set['NAME'])
+			$update['UF_NAME'] = $newSet['NAME'];
+		if ($newSet['DATA'])
 		{
-			$newData = $templ['DATA'];
-			foreach ($newTempl['DATA'] as $key => $value)
+			$newData = $set['DATA'];
+			foreach ($newSet['DATA'] as $key => $value)
 				$newData[$key] = $value;
 
 			$encoded = json_encode($newData, JSON_UNESCAPED_UNICODE);
-			if ($templ['DATA_ORIG'] != $encoded)
+			if ($set['DATA_ORIG'] != $encoded)
 				$update['UF_DATA'] = $encoded;
 		}
 
@@ -140,14 +141,14 @@ class Templ
 			$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
 			$entity = HighloadBlockTable::compileEntity($entityInfo);
 			$dataClass = $entity->getDataClass();
-			$dataClass::update($templ['ID'], $update);
+			$dataClass::update($set['ID'], $update);
 
-			self::getByProject($templ['PROJECT'], true);
-			$templ = self::getById($templ['ID'], $templ['PROJECT']);
-			$templ['UPDATED'] = true;
+			self::getByProject($set['PROJECT'], true);
+			$set = self::getById($set['ID'], $set['PROJECT']);
+			$set['UPDATED'] = true;
 		}
 
-		return $templ;
+		return $set;
 	}
 
 }

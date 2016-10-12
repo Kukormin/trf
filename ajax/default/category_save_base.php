@@ -3,9 +3,9 @@ $return = array();
 
 $categoryId = intval($_REQUEST['cid']);
 $projectId = intval($_REQUEST['pid']);
-$campaign = \Local\Category::getById($categoryId, $projectId);
+$category = \Local\Main\Category::getById($categoryId, $projectId);
 
-if ($campaign)
+if ($category)
 {
 	$baseWords = array();
 	foreach ($_REQUEST['w'] as $k => $words)
@@ -28,11 +28,11 @@ if ($campaign)
 		'BASE' => $baseWords,
 		'BASE_MAX' => intval($_REQUEST['max']),
 	);
-	$campaign = \Local\Category::update($campaign, array('DATA' => $data));
+	$category = \Local\Main\Category::update($category, array('DATA' => $data));
 
-	if ($campaign['UPDATED'])
+	if ($category['UPDATED'])
 	{
-		$result = \Local\Category::combo($campaign);
+		$result = \Local\Main\Category::combo($category);
 
 		ob_start();
 

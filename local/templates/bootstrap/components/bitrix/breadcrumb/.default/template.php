@@ -6,7 +6,7 @@ if(!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED!==true)die();
 ob_start();
 
 $l = count($arResult);
-if ($l)
+if ($l > 1)
 {
 	$l--;
 	?>

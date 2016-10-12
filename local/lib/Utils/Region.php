@@ -1,17 +1,19 @@
 <?
-namespace Local;
+namespace Local\Utils;
+
 use Local\Api\ApiException;
 use Local\Direct\Api5;
+use Local\System\ExtCache;
 
 /**
- * Регоины
+ * Регионы
  */
 class Region
 {
 	/**
 	 * Путь для кеширования
 	 */
-	const CACHE_PATH = 'Local/Region/';
+	const CACHE_PATH = 'Local/Utils/Region/';
 
 	/**
 	 * ID инфоблока с регионами

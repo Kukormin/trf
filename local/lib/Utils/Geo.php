@@ -1,5 +1,5 @@
 <?
-namespace Local;
+namespace Local\Utils;
 
 class Geo {
 

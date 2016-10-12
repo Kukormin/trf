@@ -8,10 +8,10 @@ $onlyCheck = $_REQUEST['only_check'] == 'Y';
 
 $ex = false;
 
-$project = \Local\Project::getById($projectId);
+$project = \Local\Main\Project::getById($projectId);
 if ($project)
 {
-	$cats = \Local\Category::getByProject($project['ID']);
+	$cats = \Local\Main\Category::getByProject($project['ID']);
 	foreach ($cats as $cat)
 	{
 		if ($cat['ID'] == $categoryId)
@@ -28,8 +28,8 @@ if ($project)
 	{
 		if ($categoryId)
 		{
-			$category = \Local\Category::getById($categoryId, $project['ID']);
-			$category = \Local\Category::update($category, array(
+			$category = \Local\Main\Category::getById($categoryId, $project['ID']);
+			$category = \Local\Main\Category::update($category, array(
 				'NAME' => $name,
 			));
 			if ($category['UPDATED'])
@@ -37,9 +37,9 @@ if ($project)
 		}
 		else
 		{
-			$category = \Local\Category::add($name, $project['ID']);
+			$category = \Local\Main\Category::add($name, $project['ID']);
 			if ($category['NEW'])
-				$return['redirect'] = \Local\Category::getHref($category) . 'settings/';
+				$return['redirect'] = \Local\Main\Category::getHref($category) . 'settings/';
 		}
 	}
 }

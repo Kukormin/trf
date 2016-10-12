@@ -1,5 +1,5 @@
 <?
-namespace Local;
+namespace Local\System;
 
 use Bitrix\Main\Application;
 use Bitrix\Main\Data\Cache;

@@ -3,9 +3,9 @@ $return = array();
 
 $categoryId = intval($_REQUEST['cid']);
 $projectId = intval($_REQUEST['pid']);
-$campaign = \Local\Category::getById($categoryId, $projectId);
+$category = \Local\Main\Category::getById($categoryId, $projectId);
 
-if ($campaign)
+if ($category)
 {
 	$addWords = array();
 	foreach (explode("\n", $_REQUEST['add_words']) as $word)
@@ -15,14 +15,14 @@ if ($campaign)
 			$addWords[$word] = $word;
 	}
 
-	$result = \Local\Category::additionalWords($campaign, $addWords, $_REQUEST['de'] == 'on');
+	$result = \Local\Main\Category::additionalWords($category, $addWords, $_REQUEST['de'] == 'on');
 
 	$data = array(
 		'ADD_WORDS' => $result['WORDS'],
 	);
-	$campaign = \Local\Category::update($campaign, array('DATA' => $data));
+	$category = \Local\Main\Category::update($category, array('DATA' => $data));
 
-	if ($campaign['UPDATED'])
+	if ($category['UPDATED'])
 	{
 		ob_start();
 

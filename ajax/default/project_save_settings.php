@@ -8,7 +8,7 @@ $onlyCheck = $_REQUEST['only_check'] == 'Y';
 
 $ex = false;
 
-$projects = \Local\Project::getByCurrentUser();
+$projects = \Local\Main\Project::getByCurrentUser();
 foreach ($projects as $project)
 {
 	if ($project['ID'] == $projectId)
@@ -27,8 +27,8 @@ if (!$ex && !$onlyCheck)
 {
 	if ($projectId)
 	{
-		$project = \Local\Project::getById($projectId);
-		$project = \Local\Project::update($project, array(
+		$project = \Local\Main\Project::getById($projectId);
+		$project = \Local\Main\Project::update($project, array(
 			'NAME' => $name,
 		));
 		if ($project['UPDATED'])
@@ -36,8 +36,8 @@ if (!$ex && !$onlyCheck)
 	}
 	else
 	{
-		$project = \Local\Project::add($url, $name);
+		$project = \Local\Main\Project::add($url, $name);
 		if ($project['NEW'])
-			$return['redirect'] = \Local\Project::getHref($project['ID']) . 'settings/';
+			$return['redirect'] = \Local\Main\Project::getHref($project['ID']) . 'settings/';
 	}
 }

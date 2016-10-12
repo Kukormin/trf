@@ -1,14 +1,15 @@
 <?
-namespace Local;
+namespace Local\Utils;
 
 use \Local\Direct\Api5;
+use Local\System\ExtCache;
 
 class TmpGroups {
 
 	/**
 	 * Путь для кеширования
 	 */
-	const CACHE_PATH = 'Local/TmpGroups/';
+	const CACHE_PATH = 'Local/Utils/TmpGroups/';
 
 	/**
 	 * ID инфоблока

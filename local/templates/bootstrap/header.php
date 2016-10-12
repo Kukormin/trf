@@ -12,19 +12,16 @@
 
 	$assetInstance = \Bitrix\Main\Page\Asset::getInstance();
 	$assetInstance->addCss(SITE_TEMPLATE_PATH . '/css/bootstrap.min.css', true);
-	//$assetInstance->addJs(SITE_TEMPLATE_PATH . '/js/jquery.js');
-	//$assetInstance->addJs(SITE_TEMPLATE_PATH . '/js/bootstrap.min.js');
-	//$assetInstance->addJs(SITE_TEMPLATE_PATH . '/js/main.js');
 	$APPLICATION->ShowCSS();
 	?>
 	<script src="<?= SITE_TEMPLATE_PATH ?>/js/init.js"></script>
 </head>
 <body><?
 	//$APPLICATION->ShowPanel();
-	$user = \Local\ExtUser::getCurrentUser();
+	$user = \Local\Main\User::getCurrentUser();
 
 	?>
-	<div class="container">
+	<div class="container-fluid">
 		<div class="navbar">
 			<div class="navbar-inner">
 
@@ -33,7 +30,7 @@
 				<div class="nav-collapse collapse navbar-inverse-collapse">
 					<ul class="nav">
 						<li>
-							<a href="#">Ссылка 1</a>
+							<a href="/bitrix/admin/">(Админка)</a>
 						</li><?
 
 						if ($USER->IsAuthorized())
@@ -56,10 +53,10 @@
 								<ul class="dropdown-menu">
 									<li class="<?= $user['INTERFACE']['EXTENDED'] ? 'user-settings-regime' : 'disabled'
 									?>">
-										<a href="#" data-id="simple">Начинающий</a>
+										<a href="javascript:void(0)" data-id="simple">Начинающий</a>
 									</li>
 									<li class="<?= $user['INTERFACE']['EXTENDED'] ? 'user-settings' : 'user-settings-regime' ?>">
-										<a href="#" data-id="extended">Эксперт</a>
+										<a href="javascript:void(0)" data-id="extended">Эксперт</a>
 									</li>
 								</ul>
 							</li>
@@ -83,7 +80,7 @@
 			</div>
 		</div>
 	</div>
-	<div class="container"><?
+	<div class="container-fluid"><?
 
 		$APPLICATION->IncludeComponent('bitrix:breadcrumb', '', Array());
 

@@ -1,5 +1,5 @@
 <?
-namespace Local;
+namespace Local\Utils;
 
 /**
  * Парсер сайтов
@@ -8,18 +8,17 @@ class Parser
 {
 	const TIMEOUT = 30;
 
-	public static function get($url)
+	public static function getWithInfo($url)
 	{
 		$result = '';
 		$filename = $_SERVER['DOCUMENT_ROOT'] . '/_log/urls/' . md5($url) . '.html';
 		if (file_exists($filename))
-			$result = file_get_contents($filename);
+			$result = unserialize(file_get_contents($filename));
 
 		if (!$result)
 		{
 
 			$ch = curl_init();
-			//debugmessage($url);
 			curl_setopt($ch, CURLOPT_URL, idn_to_ascii($url));
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_ACCEPT_ENCODING, "");
@@ -27,13 +26,21 @@ class Parser
 			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 			curl_setopt($ch, CURLOPT_TIMEOUT, self::TIMEOUT);
 			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, self::TIMEOUT);
-			$result = curl_exec($ch);
+			$html = curl_exec($ch);
+			$result = curl_getinfo($ch);
+			$result['HTML'] = $html;
 			curl_close($ch);
 
-			file_put_contents($filename, $result);
+			file_put_contents($filename, serialize($result));
 		}
 
 		return $result;
+	}
+
+	public static function get($url)
+	{
+		$res = self::getWithInfo($url);
+		return $res['HTML'];
 	}
 
 	public static function site($url)

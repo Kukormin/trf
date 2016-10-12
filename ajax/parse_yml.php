@@ -6,7 +6,7 @@
 
 	$catalog = array();
 	$links = array();
-	$project = \Local\Project::getAdding();
+	$project = \Local\Main\Project::getAdding();
 
 	if ($project['YML'])
 	{
@@ -14,7 +14,7 @@
 			$catalog = $project['DATA']['CATALOG'];
 		else
 		{
-			$catalog = \Local\Parser::yml($project['YML']);
+			$catalog = \Local\Main\Parser::yml($project['YML']);
 			if ($catalog)
 			{
 				$data = array(
@@ -22,7 +22,7 @@
 						'CATALOG' => $catalog,
 					),
 				);
-				\Local\Project::update($project, $data);
+				\Local\Main\Project::update($project, $data);
 			}
 		}
 	}
@@ -33,7 +33,7 @@
 			$links = $project['DATA']['LINKS'];
 		else
 		{
-			$links = \Local\Parser::links($project['URL']);
+			$links = \Local\Main\Parser::links($project['URL']);
 			if ($links)
 			{
 				$data = array(
@@ -41,7 +41,7 @@
 						'LINKS' => $links,
 					),
 				);
-				\Local\Project::update($project, $data);
+				\Local\Main\Project::update($project, $data);
 			}
 		}
 	}

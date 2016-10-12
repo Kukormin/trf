@@ -1,7 +1,8 @@
 <?
-namespace Local;
+namespace Local\Main;
 use Local\Direct\Clients;
 use Local\Google\Aw;
+use Local\System\ExtCache;
 
 /**
  * Проекты
@@ -11,7 +12,7 @@ class Project
 	/**
 	 * Путь для кеширования
 	 */
-	const CACHE_PATH = 'Local/Project/';
+	const CACHE_PATH = 'Local/Main/Project/';
 
 	/**
 	 * ID инфоблока с проектами
@@ -84,7 +85,7 @@ class Project
 	public static function getByCurrentUser($refreshCache = false)
 	{
 		$return = array();
-		$userId = ExtUser::getCurrentUserId();
+		$userId = User::getCurrentUserId();
 		if (!$userId)
 			return $return;
 
@@ -196,7 +197,7 @@ class Project
 	public static function getAdding()
 	{
 		$return = array();
-		$userId = ExtUser::getCurrentUserId();
+		$userId = User::getCurrentUserId();
 		if (!$userId)
 			return $return;
 
@@ -211,7 +212,7 @@ class Project
 	public static function add($url, $name)
 	{
 		$return = array();
-		$userId = ExtUser::getCurrentUserId();
+		$userId = User::getCurrentUserId();
 		if (!$userId)
 			return $return;
 
@@ -297,7 +298,7 @@ class Project
 		$return = array(
 			'errors' => array(),
 		);
-		$userId = ExtUser::getCurrentUserId();
+		$userId = User::getCurrentUserId();
 		if (!$userId)
 		{
 			$return['errors'][] = 'Ошибка авторизации';
@@ -527,7 +528,7 @@ class Project
 
 	public static function addMetrikaToken($token)
 	{
-		$userId = ExtUser::getCurrentUserId();
+		$userId = User::getCurrentUserId();
 		if (!$userId)
 			return 'Ошибка авторизации';
 
@@ -542,7 +543,7 @@ class Project
 
 	public static function addAnalyticsToken($token)
 	{
-		$userId = ExtUser::getCurrentUserId();
+		$userId = User::getCurrentUserId();
 		if (!$userId)
 			return 'Ошибка авторизации';
 

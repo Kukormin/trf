@@ -1,27 +1,28 @@
 <?
-namespace Local;
+namespace Local\Main;
 
 use Bitrix\Highloadblock\HighloadBlockTable;
+use Local\System\ExtCache;
 
 /**
- * Наборы быстрых ссылок
+ * Виртуальные визитки
  */
-class Linkset
+class Vcard
 {
 	/**
 	 * Путь для кеширования
 	 */
-	const CACHE_PATH = 'Local/Linkset/';
+	const CACHE_PATH = 'Local/Main/Vcard/';
 
 	/**
 	 * ID HL-блока
 	 */
-	const ENTITY_ID = 5;
+	const ENTITY_ID = 6;
 
 	/**
 	 * Ключ в урле
 	 */
-	const URL = 'links';
+	const URL = 'vcards';
 
 	public static function getByProject($projectId, $refreshCache = false)
 	{
@@ -84,18 +85,18 @@ class Linkset
 		return self::getListHref($projectId) . 'new/';
 	}
 
-	public static function getHref($set)
+	public static function getHref($card)
 	{
-		return self::getListHref($set['PROJECT']) . $set['ID'] . '/';
+		return self::getListHref($card['PROJECT']) . $card['ID'] . '/';
 	}
 
-	public static function add($newSet)
+	public static function add($newCard)
 	{
-		$projectId = $newSet['PROJECT'];
+		$projectId = $newCard['PROJECT'];
 		$data = array();
-		$data['UF_NAME'] = $newSet['NAME'];
+		$data['UF_NAME'] = $newCard['NAME'];
 		$data['UF_PROJECT'] = $projectId;
-		$data['UF_DATA'] = json_encode($newSet['DATA'], JSON_UNESCAPED_UNICODE);
+		$data['UF_DATA'] = json_encode($newCard['DATA'], JSON_UNESCAPED_UNICODE);
 
 		$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
 		$entity = HighloadBlockTable::compileEntity($entityInfo);
@@ -104,34 +105,34 @@ class Linkset
 		$id = $result->getId();
 
 		self::getByProject($projectId, true);
-		$set = self::getById($id, $projectId);
-		$set['NEW'] = true;
-		return $set;
+		$card = self::getById($id, $projectId);
+		$card['NEW'] = true;
+		return $card;
 	}
 
-	public static function delete($set)
+	public static function delete($card)
 	{
 		$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
 		$entity = HighloadBlockTable::compileEntity($entityInfo);
 		$dataClass = $entity->getDataClass();
-		$dataClass::delete($set['ID']);
+		$dataClass::delete($card['ID']);
 
-		self::getByProject($set['PROJECT'], true);
+		self::getByProject($card['PROJECT'], true);
 	}
 
-	public static function update($set, $newSet)
+	public static function update($card, $newSet)
 	{
 		$update = array();
-		if (isset($newSet['NAME']) && $newSet['NAME'] != $set['NAME'])
+		if (isset($newSet['NAME']) && $newSet['NAME'] != $card['NAME'])
 			$update['UF_NAME'] = $newSet['NAME'];
 		if ($newSet['DATA'])
 		{
-			$newData = $set['DATA'];
+			$newData = $card['DATA'];
 			foreach ($newSet['DATA'] as $key => $value)
 				$newData[$key] = $value;
 
 			$encoded = json_encode($newData, JSON_UNESCAPED_UNICODE);
-			if ($set['DATA_ORIG'] != $encoded)
+			if ($card['DATA_ORIG'] != $encoded)
 				$update['UF_DATA'] = $encoded;
 		}
 
@@ -140,14 +141,14 @@ class Linkset
 			$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
 			$entity = HighloadBlockTable::compileEntity($entityInfo);
 			$dataClass = $entity->getDataClass();
-			$dataClass::update($set['ID'], $update);
+			$dataClass::update($card['ID'], $update);
 
-			self::getByProject($set['PROJECT'], true);
-			$set = self::getById($set['ID'], $set['PROJECT']);
-			$set['UPDATED'] = true;
+			self::getByProject($card['PROJECT'], true);
+			$card = self::getById($card['ID'], $card['PROJECT']);
+			$card['UPDATED'] = true;
 		}
 
-		return $set;
+		return $card;
 	}
 
 }
