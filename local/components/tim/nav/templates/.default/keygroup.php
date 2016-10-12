@@ -5,6 +5,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true)
 /** @var Components\Navigaton $component */
 
 $projectId = $component->projectId;
+$project = $component->project;
 $category = $component->category;
 $keygroup = $component->keygroup;
 
@@ -95,6 +96,7 @@ $ws = $keygroup['WORDSTAT'] == -1 ? 'не проверена' : $keygroup['WORDS
 		{
 			if (in_array($templ['ID'], $keygroup['TEMPLATES']))
 			{
+				\Local\Main\Ad::createByTempl($keygroup['NAME'], $templ, $category, $project);
 				/*?>
 				<div class="example"><?= $?>
 				<div class="yandex-serp">

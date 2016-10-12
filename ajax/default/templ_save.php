@@ -27,14 +27,13 @@ if ($project)
 	if (!$ex && !$onlyCheck)
 	{
 		$data = array(
-			'TEXT' => $_REQUEST['text'],
-			'WEIGHT' => $_REQUEST['weight'] == 'on',
 			'REPLACE' => $_REQUEST['replace'] == 'on',
+			'TITLE_PLUS' => $_REQUEST['title_plus'] == 'on',
+			'TEXT_TITLE' => $_REQUEST['text_title'] == 'on',
+			'TEXT_TITLE_PLUS' => $_REQUEST['text_title_plus'] == 'on',
+			'TEXT_PLUS' => $_REQUEST['text_plus'] == 'on',
 			'LINKSET' => $_REQUEST['linkset'],
 			'VCARD' => $_REQUEST['vcard'],
-			'SCHEME' => $_REQUEST['scheme'],
-			'URL' => $_REQUEST['url'],
-			'DURL' => $_REQUEST['durl'],
 		);
 		$newTempl = array(
 			'NAME' => $name,

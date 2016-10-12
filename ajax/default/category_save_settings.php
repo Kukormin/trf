@@ -28,9 +28,15 @@ if ($project)
 	{
 		if ($categoryId)
 		{
+			$data = array(
+				'SCHEME' => $_REQUEST['scheme'],
+				'PATH' => $_REQUEST['path'],
+				'PRINT_PATH' => $_REQUEST['print-path'],
+			);
 			$category = \Local\Main\Category::getById($categoryId, $project['ID']);
 			$category = \Local\Main\Category::update($category, array(
 				'NAME' => $name,
+			    'DATA' => $data,
 			));
 			if ($category['UPDATED'])
 				$return['name'] = $category['NAME'];

@@ -7,17 +7,27 @@ $category = \Local\Main\Category::getById($categoryId, $projectId);
 
 if ($category)
 {
-	$weight = array();
-	foreach ($_REQUEST['w'] as $item)
+	$title = array();
+	foreach ($_REQUEST['w1'] as $item)
 	{
 		$item = trim($item);
 		if ($item)
-			$weight[$item] = strlen($item);
+			$title[$item] = strlen($item);
 	}
-	arsort($weight);
+	arsort($title);
+
+	$text = array();
+	foreach ($_REQUEST['w2'] as $item)
+	{
+		$item = trim($item);
+		if ($item)
+			$text[$item] = strlen($item);
+	}
+	arsort($text);
 
 	$data = array(
-		'WEIGHT' => array_keys($weight),
+		'TITLE_PLUS' => array_keys($title),
+		'TEXT_PLUS' => array_keys($text),
 	);
 	$category = \Local\Main\Category::update($category, array('DATA' => $data));
 

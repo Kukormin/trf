@@ -2,7 +2,7 @@
 $return = array();
 
 $url = $_REQUEST['url'];
-$res = \Local\Main\Parser::getWithInfo($url);
+$res = \Local\Utils\Parser::getWithInfo($url);
 
 if ($res['HTML'] === false)
 	$return['error'] = 'Ошибка загрузки сайта';

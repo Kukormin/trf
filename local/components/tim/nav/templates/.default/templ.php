@@ -32,51 +32,36 @@ $templ = $component->templ;
 	<div class="control-group">
 		<label class="control-label" for="title">Заголовок</label>
 		<div class="controls">
-			Начальная часть ключевой фразы (до 33 символов)
+			<label class="checkbox">
+				<input type="checkbox" checked disabled />
+				1) Ключевая фраза
+			</label>
+			<label class="checkbox">
+				<input type="checkbox" name="replace"<?= $templ['DATA']['REPLACE'] ? ' checked' : '' ?> />
+				2) Использовать словарь автозамен при обработке ключевой фразы
+			</label>
+			<label class="checkbox">
+				<input type="checkbox" name="title_plus"<?= $templ['DATA']['TITLE_PLUS'] ? ' checked' : '' ?> />
+				3) Присоединять к заголовку самую длинную из добавок (настраиваются в категории)
+			</label>
 		</div>
 	</div>
 	<div class="control-group">
 		<label class="control-label">Текст объявления</label>
 		<div class="controls">
-			<label class="radio">
-				<input type="radio" name="text" value="0"<?= !$templ['DATA']['TEXT'] ? ' checked' : '' ?> />
-				Оставшаяся часть ключевой фразы (что не уместилось в заголовок)
-			</label>
-			<label class="radio">
-				<input type="radio" name="text" value="1"<?= $templ['DATA']['TEXT'] ? ' checked' : '' ?> />
-				Ключевая фраза целиком
+			<label class="checkbox">
+				<input type="checkbox" name="text_title"<?= $templ['DATA']['TEXT_TITLE'] ? ' checked' : '' ?> />
+				1) Выводить остаток ключевой фразы (если не уместилась в заголовке целиком)
 			</label>
 			<label class="checkbox">
-				<input type="checkbox" name="weight"<?= $templ['DATA']['WEIGHT'] ? ' checked' : '' ?> />
-				Присоединять к тексту объявления самую длинную возможную добавку
+				<input type="checkbox" name="text_title_plus"<?= $templ['DATA']['TEXT_TITLE_PLUS'] ? ' checked' : ''
+				?> />
+				2) Выводить остаток длинной добавки заголовка
 			</label>
-		</div>
-	</div>
-	<div class="control-group">
-		<div class="controls">
 			<label class="checkbox">
-				<input type="checkbox" name="replace"<?= $templ['DATA']['REPLACE'] ? ' checked' : '' ?> />
-				Использовать словарь автозамен при формировании заголовка и текста
+				<input type="checkbox" name="text_plus"<?= $templ['DATA']['TEXT_PLUS'] ? ' checked' : '' ?> />
+				3) Присоединять к тексту объявления самую длинную из добавок (настраиваются в категории)
 			</label>
-		</div>
-	</div>
-	<div class="control-group">
-		<label class="control-label" for="url">Ссылка</label>
-		<div class="controls">
-			<select class="input-small" id="scheme" name="scheme">
-				<option value="http"<?= $templ['DATA']['SCHEME'] == 'http' ? ' selected' : '' ?>>http://</option>
-				<option value="https"<?= $templ['DATA']['SCHEME'] == 'https' ? ' selected' : '' ?>>https://</option>
-			</select>
-			<input type="text" id="host" name="host" value="<?= $project['URL'] ?>" disabled />
-			<input type="text" id="url" name="url" value="<?= $templ['DATA']['URL'] ?>" />
-			<span class="help-inline"></span>
-		</div>
-	</div>
-	<div class="control-group">
-		<label class="control-label" for="durl">Отображаемая ссылка</label>
-		<div class="controls">
-			<input type="text" id="durl" name="durl" value="<?= $templ['DATA']['DURL'] ?>" />
-			<span class="help-inline"></span>
 		</div>
 	</div>
 	<div class="control-group">

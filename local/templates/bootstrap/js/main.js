@@ -439,19 +439,34 @@ if (siteOptions.categoryPage) {
 		settingsForm: false,
 		btnSave: false,
 		nameInput: false,
+		schemeInput: false,
+		host: '',
+		pathInput: false,
+		resInput: false,
 		nameControlGroup: false,
 		nameHelp: false,
+		resControlGroup: false,
+		resHelp: false,
 		name: '',
 		nameTimerId: 0,
+		urlTimerId: 0,
 		init: function () {
 			this.detail = $('#category_detail');
 			this.settingsForm = this.detail.find('#settings_form');
 			this.btnSave = this.settingsForm.find('#save_settings');
 			this.nameInput = this.settingsForm.find('#name');
+			this.schemeInput = this.settingsForm.find('#scheme');
+			this.host = this.settingsForm.find('#host').val();
+			this.pathInput = this.settingsForm.find('#path');
+			this.resInput = this.settingsForm.find('#res');
 			this.nameControlGroup = this.nameInput.closest('.control-group');
+			this.resControlGroup = this.resInput.closest('.control-group');
 			this.nameHelp = this.nameControlGroup.find('.help-inline');
+			this.resHelp = this.resControlGroup.find('.help-inline');
 			this.initCheck();
 			this.nameInput.on('input', this.checkCategoryName);
+			this.schemeInput.on('input', this.checkHref);
+			this.pathInput.on('input', this.checkHref);
 			this.btnSave.click(this.saveSettings);
 		},
 		initCheck: function() {
@@ -478,6 +493,29 @@ if (siteOptions.categoryPage) {
 				CategoryPage.nameHelp.text('Введите название категории');
 				CategoryPage.btnSave.prop('disabled', true);
 			}
+		},
+		checkHref: function() {
+			var res = CategoryPage.schemeInput.val() + '://' + CategoryPage.host + CategoryPage.pathInput.val();
+			CategoryPage.resInput.val(res);
+			if (CategoryPage.urlTimerId)
+				clearTimeout(CategoryPage.urlTimerId);
+			CategoryPage.urlTimerId = setTimeout(CategoryPage.getSite(), 500);
+		},
+		getSite: function() {
+			CategoryPage.resControlGroup.find('.loader').addClass('inp');
+			CategoryPage.resHelp.text('');
+			var url = CategoryPage.resInput.val();
+			CMN.ajax(CategoryPage.resControlGroup, 'get_site', 'url=' + url, function(data) {
+				if (data.error)
+				{
+					CategoryPage.resControlGroup.addClass('warning');
+					CategoryPage.resHelp.text(data.error);
+				}
+				else
+				{
+					CategoryPage.resControlGroup.removeClass('warning');
+				}
+			});
 		},
 		saveSettingsAjax: function (save) {
 			var addParams = '';
@@ -512,40 +550,38 @@ if (siteOptions.categoryPage) {
 		baseForm: false,
 		addForm: false,
 		replaceForm: false,
-		weightForm: false,
+		plusForm: false,
 		rowsDiv: false,
 		replaceDiv: false,
-		weightDiv: false,
+		titlePlusDiv: false,
+		textPlusDiv: false,
 		addRowBtn: false,
 		replaceRowBtn: false,
-		weightRowBtn: false,
 		totalSpan: false,
 		cols: false,
 		maxColsInput: false,
 		saveBaseBtn: false,
 		saveAddBtn: false,
 		saveReplaceBtn: false,
-		saveWeightBtn: false,
 		textarea: false,
 		checkbox: false,
 		init: function () {
 			this.baseForm = $('#base_words');
 			this.addForm = $('#additional_words');
 			this.replaceForm = $('#replace-form');
-			this.weightForm = $('#weight-form');
+			this.plusForm = $('#plus-form');
 			this.rowsDiv = this.baseForm.find('.rows');
 			this.replaceDiv = this.replaceForm.find('.rows');
-			this.weightDiv = this.weightForm.find('.rows');
+			this.titlePlusDiv = this.plusForm.find('.title-plus .rows');
+			this.textPlusDiv = this.plusForm.find('.text-plus .rows');
 			this.addRowBtn = this.baseForm.find('#add_row');
 			this.replaceRowBtn = this.replaceForm.find('.add-row');
-			this.weightRowBtn = this.weightForm.find('.add-row');
 			this.totalSpan = this.baseForm.find('#total_cnt');
 			this.cols = this.rowsDiv.find('.span2');
 			this.maxColsInput = this.baseForm.find('#max');
 			this.saveBaseBtn = this.baseForm.find('.btn-primary');
 			this.saveAddBtn = this.addForm.find('.btn-primary');
 			this.saveReplaceBtn = this.replaceForm.find('.btn-primary');
-			this.saveWeightBtn = this.weightForm.find('.btn-primary');
 			this.textarea = this.rowsDiv.find('textarea');
 			this.checkbox = this.rowsDiv.find('input');
 
@@ -553,14 +589,15 @@ if (siteOptions.categoryPage) {
 
 			this.addRowBtn.click(this.addRow);
 			this.replaceRowBtn.click(this.addReplaceRow);
-			this.weightRowBtn.click(this.addWeightRow);
+			this.plusForm.find('.title-plus .add-row').click(this.addTitlePlusRow);
+			this.plusForm.find('.text-plus .add-row').click(this.addTextPlusRow);
 			this.maxColsInput.on('input', this.calcComboCnt);
 			this.textarea.on('input', this.calcComboCnt);
 			this.checkbox.click(this.calcComboCnt);
 			this.saveBaseBtn.click(this.saveBase);
 			this.saveAddBtn.click(this.saveAdd);
 			this.saveReplaceBtn.click(this.saveReplace);
-			this.saveWeightBtn.click(this.saveWeight);
+			this.plusForm.find('.btn-primary').click(this.savePlus);
 		},
 		addRow: function() {
 			var html = '<div class="row-fluid">';
@@ -576,9 +613,13 @@ if (siteOptions.categoryPage) {
 				'<input type="text" name="from[]" value="" /> <input type="text" name="to[]" value="" /></div>';
 			Words.replaceDiv.append(html);
 		},
-		addWeightRow: function() {
-			var html = '<div class="control-group"><input type="text" name="w[]" value="" /></div>';
-			Words.weightDiv.append(html);
+		addTitlePlusRow: function() {
+			var html = '<div class="control-group"><input type="text" name="w1[]" value="" /></div>';
+			Words.titlePlusDiv.append(html);
+		},
+		addTextPlusRow: function() {
+			var html = '<div class="control-group"><input type="text" name="w2[]" value="" /></div>';
+			Words.textPlusDiv.append(html);
 		},
 		calcComboCnt: function() {
 			var reqCnt = 0;
@@ -663,8 +704,8 @@ if (siteOptions.categoryPage) {
 			CMN.ajax(Words.replaceForm, 'category_save_replace');
 			return false;
 		},
-		saveWeight: function() {
-			CMN.ajax(Words.weightForm, 'category_save_weight');
+		savePlus: function() {
+			CMN.ajax(Words.plusForm, 'category_save_plus');
 			return false;
 		}
 	};

@@ -204,6 +204,15 @@ foreach ($tabs as $code => $name)
 	//
 	elseif ($code == 'settings')
 	{
+		if ($category['DATA']['NEW'])
+		{
+			?>
+			<div class="alert alert-success">
+				<button type="button" class="close" data-dismiss="alert">×</button>
+				Категория успешно создана
+			</div><?
+		}
+
 		?>
 		<form id="settings_form" class="form-horizontal">
 			<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
@@ -219,13 +228,54 @@ foreach ($tabs as $code => $name)
 				</div>
 			</fieldset><?
 
-			if ($category['DATA']['NEW'])
+			if ($categoryId)
 			{
+				$scheme = $category['DATA']['SCHEME'] == 'https' ? 'https' : 'http';
+				$res = $scheme . '://' . $project['URL'] . $category['DATA']['PATH'];
 				?>
-				<div class="alert alert-success">
-					<button type="button" class="close" data-dismiss="alert">×</button>
-					Категория успешно создана
-				</div><?
+				<fieldset>
+					<legend>Ссылка на рекламируемую страницу</legend>
+					<div class="control-group">
+						<label class="control-label" for="scheme">Протокол</label>
+						<div class="controls">
+							<select class="input-small" id="scheme" name="scheme">
+								<option value="http"<?= $scheme == 'http' ? ' selected' : '' ?>>http://</option>
+								<option value="https"<?= $scheme == 'https' ? ' selected' : '' ?>>https://</option>
+							</select>
+							<span class="help-inline"></span>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="host">Хост</label>
+						<div class="controls">
+							<input type="text" id="host" name="host" value="<?= $project['URL'] ?>" disabled />
+							<span class="help-inline"></span>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="path">Путь</label>
+						<div class="controls">
+							<input type="text" id="path" name="path" value="<?= $category['DATA']['PATH'] ?>" />
+							<span class="help-inline"></span>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="print-path">Отображаемая ссылка</label>
+						<div class="controls">
+							<input type="text" id="print-path" name="print-path"
+							       value="<?= $category['DATA']['PRINT_PATH'] ?>" />
+							<span class="help-inline"></span>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" for="res">Результат</label>
+						<div class="controls">
+							<input type="text" class="input-xxlarge" id="res" value="<?= $res ?>" disabled />
+							<span class="loader"></span>
+							<span class="help-inline"></span>
+						</div>
+					</div>
+				</fieldset><?
 			}
 
 			?>
@@ -387,32 +437,62 @@ foreach ($tabs as $code => $name)
 	//
 	elseif ($code == 'weight')
 	{
-		$weight = $category['DATA']['WEIGHT'];
+		$titlePlus = $category['DATA']['TITLE_PLUS'];
+		$textPlus = $category['DATA']['TEXT_PLUS'];
 		?>
-		<form id="weight-form">
-			<fieldset>
-				<legend>Дополнения к текстам объявлений</legend>
-				<input type="hidden" name="cid" value="<?= $category['ID'] ?>" />
-				<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
-				<div class="rows"><?
+		<form id="plus-form">
+			<div class="row-fluid">
+				<div class="span6 title-plus">
+					<fieldset>
+						<legend>Дополнения к заголовкам объявлений</legend>
+						<input type="hidden" name="cid" value="<?= $category['ID'] ?>" />
+						<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
+						<div class="rows"><?
 
-					foreach ($weight as $item)
-					{
-						?>
-						<div class="control-group">
-							<input type="text" name="w[]" value="<?= $item ?>"/>
-						</div><?
-					}
+							foreach ($titlePlus as $item)
+							{
+								?>
+								<div class="control-group">
+									<input type="text" name="w1[]" value="<?= $item ?>"/>
+								</div><?
+							}
 
-					?>
-					<div class="control-group">
-						<input type="text" name="w[]" value=""/>
-					</div>
+							?>
+							<div class="control-group">
+								<input type="text" name="w1[]" value=""/>
+							</div>
+						</div>
+						<p>
+							<button class="btn add-row" type="button">Добавить строку</button>
+						</p>
+					</fieldset>
 				</div>
-				<p>
-					<button class="btn add-row" type="button">Добавить строку</button>
-				</p>
-			</fieldset>
+				<div class="span6 text-plus">
+					<fieldset>
+						<legend>Дополнения к текстам объявлений</legend>
+						<input type="hidden" name="cid" value="<?= $category['ID'] ?>" />
+						<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
+						<div class="rows"><?
+
+							foreach ($textPlus as $item)
+							{
+								?>
+								<div class="control-group">
+								<input type="text" name="w2[]" value="<?= $item ?>"/>
+								</div><?
+							}
+
+							?>
+							<div class="control-group">
+								<input type="text" name="w2[]" value=""/>
+							</div>
+						</div>
+						<p>
+							<button class="btn add-row" type="button">Добавить строку</button>
+						</p>
+					</fieldset>
+				</div>
+			</div>
 			<p>
 				<button class="btn btn-primary" type="button">Сохранить</button>
 			</p>
