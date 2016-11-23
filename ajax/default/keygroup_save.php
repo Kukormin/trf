@@ -1,7 +1,5 @@
 <?
-$return = array(
-	'endless' => true,
-);
+$return = array();
 
 $projectId = intval($_REQUEST['pid']);
 $categoryId = intval($_REQUEST['cid']);
@@ -17,13 +15,7 @@ if ($category)
 		$marks = array_keys($_REQUEST['mark']);
 		if (!$marks)
 			$marks = array();
-		$templates = array_keys($_REQUEST['templ']);
-		if (!$templates)
-			$templates = array();
-		$data = array(
-		);
 		$newKeygroup = array(
-			//'DATA' => $data,
 		    'MARKS' => $marks,
 		    'TEMPLATES' => $templates,
 		);

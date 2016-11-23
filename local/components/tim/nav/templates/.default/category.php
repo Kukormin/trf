@@ -24,8 +24,9 @@ else
 		'settings' => 'Настройки',
 		'base' => 'Базовые слова',
 		'add' => 'Дополнительные фразы',
-		'replace' => 'Словарь автозамен',
-		'weight' => 'Добавки',
+		'templates' => 'Шаблоны',
+		//'replace' => 'Словарь автозамен',
+		//'weight' => 'Добавки',
 	);
 	if (!$tabs[$tabCode])
 		$tabCode = 'main';
@@ -68,135 +69,94 @@ foreach ($tabs as $code => $name)
 	//
 	if ($code == 'main')
 	{
-		$filters = \Local\Main\Keygroup::getFilters();
+		// Панель массовых операций
 		?>
-		<div class="row-fluid">
-		<div class="span2">
-			<form id="keygroup-form">
-				<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
-				<input type="hidden" name="cid" value="<?= $category['ID'] ?>" />
-				<input type="hidden" name="page" value="1" /><?
+		<div class="navbar">
+			<div class="navbar-inner">
+				<ul class="nav" id="multi-nav">
+					<li>
+						<i class="help" data-placement="bottom" data-original-title="Массовые операции"
+						   data-content="Подсказа по массовым оперциям и инверсии напр."></i>
+					</li>
+					<li class="dropdown">
+						<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+							Выбрано: <span id="selected_count">0</span> из <span id="all_count">0</span>
+							<b class="caret"></b>
+						</a>
+						<ul class="dropdown-menu">
+							<li>
+								<a id="this_page" href="javascript:void(0)">Выбрать все на этой странице</a>
+							</li>
+							<li>
+								<a id="all_page" href="javascript:void(0)">Выбрать все на ВСЕХ страницах</a>
+							</li>
+							<li>
+								<a id="toggle_page" href="javascript:void(0)">Инвертировать</a>
+							</li>
+						</ul>
+					</li>
+					<li class="dropdown hidden" id="multi-action">
+						<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+							Действие с выбранными:
+							<b class="caret"></b>
+						</a>
+						<ul class="dropdown-menu">
+							<li>
+								<a id="update_ws" href="javascript:void(0)">Обновить частотность</a>
+							</li><?
 
-				foreach ($filters as $i => $item)
-				{
-					?><br /><b><?= $item['NAME'] ?></b><br /><?
-					if ($item['TYPE'] == 'text')
-					{
-						?><input type="text" name="<?= $i ?>" value="<?= $item['VALUE'] ?>" /><br /><?
-					}
-					elseif ($item['TYPE'] == 'checkbox')
-					{
-						foreach ($item['VARS'] as $key => $var)
-						{
-							$checked = $key == $item['VALUE'] ? ' checked' : '';
-							?><input type="checkbox" name="<?= $i ?>[]" value="<?= $key ?>"<?= $checked ?> /> <?= $var
-							?><br /><?
-						}
-					}
-					elseif ($item['TYPE'] == 'radio')
-					{
-						foreach ($item['VARS'] as $key => $var)
-						{
-							$checked = $key == $item['VALUE'] ? ' checked' : '';
-							?><input type="radio" name="<?= $i ?>" value="<?= $key ?>"<?= $checked ?> /> <?= $var
-							?><br /><?
-						}
-					}
-					elseif ($item['TYPE'] == 'select')
-					{
-						?>
-						<select name="<?= $i ?>"><?
-						foreach ($item['VARS'] as $key => $var)
-						{
-							$checked = $key == $item['VALUE'] ? ' selected' : '';
-							?><option value="<?= $key ?>"<?= $checked ?>><?= $var ?></option><?
-						}
-						?>
-						</select><?
-					}
-				}
-				?>
-				<p>
-					<button id="apply" class="btn btn-primary" type="button">Применить</button>
-				</p>
-			</form>
-		</div>
-		<div class="span10">
-			<div class="navbar">
-				<div class="navbar-inner">
-					<ul class="nav" id="multi-nav">
-						<li>
-							<i class="help" data-placement="bottom" data-original-title="Массовые операции"
-							   data-content="Подсказа по массовым оперциям и инверсии напр."></i>
-						</li>
-						<li class="dropdown">
-							<a class="dropdown-toggle" data-toggle="dropdown" href="#">
-								Выбрано: <span id="selected_count">0</span> из <span id="all_count">0</span>
-								<b class="caret"></b>
-							</a>
-							<ul class="dropdown-menu">
-								<li>
-									<a id="this_page" href="javascript:void(0)">Выбрать все на этой странице</a>
-								</li>
-								<li>
-									<a id="all_page" href="javascript:void(0)">Выбрать все на ВСЕХ страницах</a>
-								</li>
-								<li>
-									<a id="toggle_page" href="javascript:void(0)">Инвертировать</a>
-								</li>
-							</ul>
-						</li>
-						<li class="dropdown hidden" id="multi-action">
-							<a class="dropdown-toggle" data-toggle="dropdown" href="#">
-								Действие с выбранными:
-								<b class="caret"></b>
-							</a>
-							<ul class="dropdown-menu">
-								<li>
-									<a id="update_ws" href="javascript:void(0)">Обновить частотность</a>
-								</li><?
-
-								if (\Local\Main\Mark::isNotEmpty())
-								{
-									?>
-									<li class="divider"></li>
-									<li class="dropdown-submenu add_mark">
-										<a href="javascript:void(0)">Добавить метку</a>
-										<? \Local\Main\Mark::printDropdown() ?>
-									</li>
-									<li class="dropdown-submenu remove_mark">
-										<a href="javascript:void(0)">Удалить метку</a>
-										<? \Local\Main\Mark::printDropdown() ?>
-									</li>
-									<li class="remove_all_mark">
-										<a href="javascript:void(0)">Удалить все метки</a>
-									</li><?
-								}
+							if (\Local\Main\Mark::isNotEmpty())
+							{
 								?>
 								<li class="divider"></li>
-								<li class="dropdown-submenu add_templ">
-									<a href="javascript:void(0)">Прикрепить шаблон</a>
-									<? \Local\Main\Templ::printDropdown($project['ID']) ?>
+								<li class="dropdown-submenu add_mark">
+									<a href="javascript:void(0)">Добавить метку</a>
+									<? \Local\Main\Mark::printDropdown() ?>
 								</li>
-								<li class="dropdown-submenu remove_templ">
-									<a href="javascript:void(0)">Удалить шаблон</a>
-									<? \Local\Main\Templ::printDropdown($project['ID']) ?>
+								<li class="dropdown-submenu remove_mark">
+									<a href="javascript:void(0)">Удалить метку</a>
+									<? \Local\Main\Mark::printDropdown() ?>
 								</li>
-								<li class="remove_all_templ">
-									<a href="javascript:void(0)">Удалить все шаблоны</a>
-								</li>
-								<li class="remove_all_manual_ad">
-									<a href="javascript:void(0)">Удалить все объявления, добавленные вручную</a>
-								</li>
-							</ul>
-						</li>
-					</ul>
-				</div>
-			</div>
-			<div id="keygroup-table">
+								<li class="remove_all_mark">
+									<a href="javascript:void(0)">Удалить все метки</a>
+								</li><?
+							}
+							?>
+							<li class="divider"></li>
+							<li class="dropdown-submenu add_templ">
+								<a href="javascript:void(0)">Создать объявление по шаблону</a>
+								<? \Local\Main\Templ::printDropdown($project['ID']) ?>
+							</li>
+						</ul>
+					</li>
+				</ul><?
 
+				$user = \Local\Main\User::getCurrentUser();
+				$filtersActive = $user['DATA']['FILTERS_SHOW'] ? ' class="active"' : '';
+				$viewActive = $user['DATA']['VIEW_SHOW'] ? ' class="active"' : '';
+				?>
+				<ul class="nav pull-right">
+					<li<?= $filtersActive ?>>
+						<a id="filters_toogle" href="javascript:void(0)">Фильтр</a>
+					</li>
+					<li<?= $viewActive ?>>
+						<a id="view_toogle" href="javascript:void(0)">Вид</a>
+					</li>
+				</ul>
 			</div>
-		</div>
+		</div><?
+
+		// ======================================================================
+		// Панель фильтров
+		//
+		include ('filters.php');
+		//
+		// ======================================================================
+
+		// Контейнер фраз (подгрузится аяксом)
+		?>
+		<div id="keygroup-table">
+
 		</div><?
 	}
 	//
@@ -260,14 +220,6 @@ foreach ($tabs as $code => $name)
 						</div>
 					</div>
 					<div class="control-group">
-						<label class="control-label" for="print-path">Отображаемая ссылка</label>
-						<div class="controls">
-							<input type="text" id="print-path" name="print-path"
-							       value="<?= $category['DATA']['PRINT_PATH'] ?>" />
-							<span class="help-inline"></span>
-						</div>
-					</div>
-					<div class="control-group">
 						<label class="control-label" for="res">Результат</label>
 						<div class="controls">
 							<input type="text" class="input-xxlarge" id="res" value="<?= $res ?>" disabled />
@@ -295,75 +247,87 @@ foreach ($tabs as $code => $name)
 		if (!$max)
 			$max = 4;
 
+		$colCount = count($category['DATA']['BASE']);
+		if ($colCount < 7)
+			$colCount = 7;
+		$rowCount = 10;
+		foreach ($category['DATA']['BASE'] as $item)
+		{
+			$cnt = count($item['WORDS']) + 1;
+			if ($cnt > $rowCount)
+				$rowCount = $cnt;
+		}
+
 		?>
+		<div id="copy_area">
+			<textarea id="copy_textarea"></textarea>
+		</div>
 		<form id="base_words">
 			<input type="hidden" name="cid" value="<?= $category['ID'] ?>" />
 			<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
 			<legend>Семантическое ядро категории</legend>
-			<div class="rows"><?
-
-				$i = 0;
-				foreach ($category['DATA']['BASE'] as $item)
-				{
-					$checked = $item['REQ'] ? ' checked' : '';
-					if ($i == 0)
-					{
-						?>
-						<div class="row-fluid"><?
-					}
-
-					?>
-					<div class="span2">
-						<label class="checkbox">
-							<input type="checkbox" name="r[]"<?= $checked ?> /> Обязательно
-						</label>
-						<textarea name="w[]"><?= implode("\n", $item['WORDS']) ?></textarea>
-					</div><?
-
-					if ($i == 5)
-					{
-						?>
-						</div><?
-						$i = 0;
-					}
-					else
-						$i++;
-				}
-				if ($i || !$category['DATA']['BASE'])
-				{
-					if (!$category['DATA']['BASE'])
-					{
-						?>
-						<div class="row-fluid"><?
-					}
-					while ($i < 6)
-					{
-						?>
-						<div class="span2">
-							<label class="checkbox">
-								<input type="checkbox" name="r[]" /> Обязательно
-							</label>
-							<textarea name="w[]"></textarea>
-						</div><?
-						$i++;
-					}
-					?>
-					</div><?
-				}
-
-			?>
-			</div>
-			<p>
-				<button id="add_row" class="btn" type="button">Добавить строку</button>
-			</p>
 			<p>
 				<input type="text" id="max" name="max" value="<?= $max ?>" />
 				Максимальное количество колонок, при формировании ключевой фразы
 			</p>
 			<p>
-				<button class="btn btn-primary" type="button">Сохранить</button>
+				<button class="btn btn-primary" type="button">Генерировать ключевые фразы</button>
+				<span class="loader-big"></span>
 				Всего ключевых фраз: <strong id="total_cnt"></strong>
 			</p>
+			<div id="base_words_wrap">
+				<table id="base_words_table">
+					<thead>
+						<tr class="">
+							<th class="f"></th><?
+							for ($j = 1; $j <= $colCount; $j++)
+							{
+								$char = chr(64 + $j);
+								$right = '';
+								if ($j == $colCount)
+									$right = '<i></i>';
+								?>
+								<th><?= $right ?><?= $char ?></th><?
+							}
+							?>
+						</tr>
+						<tr class="">
+							<th class="f"></th><?
+							for ($j = 1; $j <= $colCount; $j++)
+							{
+								$item = $category['DATA']['BASE'][$j - 1];
+								$checked = $item['REQ'] ? ' checked' : '';
+								?>
+								<th><label><input type="checkbox"<?= $checked ?> /> Обязательно</label></th><?
+							}
+							?>
+						</tr>
+					</thead>
+					<tbody><?
+
+						for ($i = 1; $i <= $rowCount; $i++)
+						{
+							?>
+							<tr>
+								<td class="f"><?= $i ?></td><?
+								for ($j = 1; $j <= $colCount; $j++)
+								{
+									$item = $category['DATA']['BASE'][$j - 1];
+									$word = $item['WORDS'][$i - 1];
+									$class = $item['REQ'] ? ' class="req"' : '';
+									?>
+									<td<?= $class ?>><?= $word ?></td><?
+								}
+								?>
+							</tr><?
+						}
+						?>
+					</tbody>
+				</table>
+				<div class="edit">
+					<input type="text" />
+				</div>
+			</div>
 			<div class="alerts"></div>
 		</form>
 		<?
@@ -376,7 +340,7 @@ foreach ($tabs as $code => $name)
 		?>
 		<form id="additional_words">
 			<fieldset>
-				<legend>Дополнительные фразы</legend>
+				<legend>Дополнительные ключевые фразы</legend>
 				<input type="hidden" name="cid" value="<?= $category['ID'] ?>" />
 				<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
 				<p>
@@ -384,7 +348,7 @@ foreach ($tabs as $code => $name)
 				</p>
 				<p>
 					<input type="checkbox" id="de" name="de" />
-					Деактивировать другие дополнительные фразы
+					Удалить другие дополнительные фразы
 				</p>
 			</fieldset>
 			<p>
@@ -393,6 +357,46 @@ foreach ($tabs as $code => $name)
 			<div class="alerts"></div>
 		</form><?
 	}
+	//
+	// ---------------------------------------------------
+	//
+	elseif ($code == 'templates')
+	{
+		?>
+		<table id="templates" class="table table-striped table-hover">
+		<thead>
+		<tr>
+			<th>Название</th>
+			<th>Данные</th>
+		</tr>
+		</thead>
+		<tbody><?
+
+		$templs = \Local\Main\Templ::getByCategory($category['ID']);
+		foreach ($templs as $templ)
+		{
+			$href = \Local\Main\Templ::getHref($templ, $category);
+			?>
+			<tr>
+			<td><a href="<?= $href ?>"><?= $templ['NAME'] ?></a></td>
+			<td></td>
+			</tr><?
+		}
+
+		?>
+		</tbody>
+		</table><?
+
+		$yhref = \Local\Main\Templ::getAddYandexHref($category);
+		$ghref = \Local\Main\Templ::getAddGoogleHref($category);
+		?>
+		<p>
+			<a href="<?= $yhref ?>" class="btn btn-primary" type="button">Добавить шаблон для <?= DIRECT_NAME ?></a>
+			<a href="<?= $ghref ?>" class="btn btn-primary" type="button">Добавить шаблон для <?= ADWORDS_NAME ?></a>
+		</p>
+	<?
+	}
+	/*
 	//
 	// --------------------------------------
 	//
@@ -498,7 +502,7 @@ foreach ($tabs as $code => $name)
 			</p>
 			<div class="alerts"></div>
 		</form><?
-	}
+	}*/
 
 	?>
 	</div><?

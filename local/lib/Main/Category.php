@@ -150,7 +150,6 @@ class Category
 
 	/**
 	 * Рекурсивный метод перебора слов для составления фраз на основе базовых слов
-	 * @param $prev
 	 * @param $key
 	 * @param $level
 	 * @param $cnt
@@ -158,32 +157,19 @@ class Category
 	 * @param $max
 	 * @param $res
 	 */
-	private static function f($prev, $key, $level, $cnt, $words, $max, &$res)
+	private static function f($key, $level, $cnt, $words, $max, &$res)
 	{
-		if ($max > 0 && $cnt > $max)
+		if ($cnt > $max)
 			return;
 
 		if ($level < count($words))
 			foreach ($words[$level] as $i => $s)
 			{
-				$key[$level] = $i;
-				if ($s)
-				{
-					$pre = $prev . ' ' . $s;
-					self::f($pre, $key, $level + 1, $cnt + 1, $words, $max, $res);
-				}
-				else
-				{
-					self::f($prev, $key, $level + 1, $cnt, $words, $max, $res);
-				}
+				$key[$level] = $s;
+				self::f($key, $level + 1, $cnt + ($s ? 1 : 0), $words, $max, $res);
 			}
 		else
-		{
-			$prev = trim($prev);
-			if ($prev)
-				$res[] = array($prev, $key);
-		}
-
+			$res[] = $key;
 	}
 
 	/**
@@ -196,19 +182,29 @@ class Category
 		$words = array();
 		foreach ($category['DATA']['BASE'] as $k => $item)
 		{
-			$words[$k] = $item['WORDS'];
-			array_unshift($words[$k], '');
-			if ($item['REQ'])
-				unset($words[$k][0]);
+			$col = array();
+			foreach ($item['WORDS'] as $word)
+			{
+				$word = trim($word);
+				if ($word)
+					$col[$word] = $word;
+			}
+			if ($col)
+			{
+				$words[$k] = array_values($col);
+				array_unshift($words[$k], '');
+				if ($item['REQ'])
+					unset($words[$k][0]);
+			}
 		}
 
 		$max = intval($category['DATA']['BASE_MAX']);
-		if (!$max)
+		if ($max < 1)
 			$max = 4;
 
 		// Результаты комбинирования базовых слов
 		$res = array();
-		self::f('', array(), 0, 0, $words, $max, $res);
+		self::f(array(), 0, 0, $words, $max, $res);
 
 		$clearCache = false;
 		// существующие в категории ключевые слова
@@ -231,26 +227,37 @@ class Category
 
 		foreach ($res as $item)
 		{
-			$kw = $item[0];
-			$cols = $item[1];
-			$base = implode(',', $cols);
 			$baseCount = 0;
-			foreach ($cols as $c)
-				if ($c)
+			$kw = '';
+			$base = '';
+			foreach ($item as $i => $word)
+				if ($word)
+				{
+					if ($kw)
+					{
+						$kw .= ' ';
+						$base .= '|';
+					}
+					$kw .= $word;
+					$base .= $i . '#' . $word;
 					$baseCount++;
+				}
+
+			if (!$kw)
+				continue;
 
 			$id = $byName[$kw];
 			if ($id)
 			{
 				unset($byName[$kw]);
 				$kg = $keygroups['ITEMS'][$id];
-				if ($base != $kg['BASE'])
+				if ($base != $kg['BASE'] || Keygroup::TYPE_BASE != $kg['TYPE'])
 				{
-					Keygroup::updateBase($id, $base, $baseCount);
+					Keygroup::updateBaseType($id, $base, $baseCount, Keygroup::TYPE_BASE);
 					$clearCache = true;
-					if ($kg['BASE'] == '-1')
+					if ($kg['TYPE'] == Keygroup::TYPE_MANUAL)
 						$result['TO_BASE']++;
-					elseif ($kg['BASE'] == '-2')
+					elseif ($kg['TYPE'] == Keygroup::TYPE_DEACTIVE)
 						$result['ACTIVE']++;
 					else
 						$result['NO']++;
@@ -260,7 +267,7 @@ class Category
 			}
 			else
 			{
-				Keygroup::add($category['PROJECT'], $category['ID'], $kw, $base, $baseCount);
+				Keygroup::add($category['PROJECT'], $category['ID'], $kw, $base, $baseCount, Keygroup::TYPE_BASE);
 				$clearCache = true;
 				$result['ADD']++;
 			}
@@ -269,19 +276,19 @@ class Category
 		foreach ($byName as $id)
 		{
 			$kg = $keygroups['ITEMS'][$id];
-			if ($kg['BASE'] == '-1')
+			if ($kg['TYPE'] == Keygroup::TYPE_MANUAL)
 			{
 				$result['NO']++;
 				$result['USER']++;
 			}
-			elseif ($kg['BASE'] == '-2')
+			elseif ($kg['TYPE'] == Keygroup::TYPE_DEACTIVE)
 			{
 				$result['NO']++;
 				$result['OLD']++;
 			}
 			else
 			{
-				Keygroup::updateBase($id, '-2', '-2');
+				Keygroup::deactivate($id);
 				$clearCache = true;
 				$result['DEACTIV']++;
 				$result['OLD']++;
@@ -307,7 +314,7 @@ class Category
 			'EX' => count($byName),
 			'ADD' => 0,
 			'ACTIV' => 0,
-			'DEACTIV' => 0,
+			'DELETE' => 0,
 			'BASE' => 0,
 			'NO' => 0,
 			'USER' => 0,
@@ -322,15 +329,15 @@ class Category
 			if ($id)
 			{
 				$kg = $keygroups['ITEMS'][$id];
-				if ($kg['BASE'] == '-1')
+				if ($kg['TYPE'] == Keygroup::TYPE_MANUAL)
 				{
 					$result['NO']++;
 					$result['WORDS'][] = $kw;
 					unset($byName[$kw]);
 				}
-				elseif ($kg['BASE'] == '-2')
+				elseif ($kg['TYPE'] == Keygroup::TYPE_DEACTIVE)
 				{
-					Keygroup::updateBase($id, '-1', '-1');
+					Keygroup::updateBaseType($id, '', 0, Keygroup::TYPE_MANUAL);
 					$clearCache = true;
 					$result['ACTIV']++;
 					$result['WORDS'][] = $kw;
@@ -343,7 +350,7 @@ class Category
 			}
 			else
 			{
-				Keygroup::add($category['PROJECT'], $category['ID'], $kw, '-1', '-1');
+				Keygroup::add($category['PROJECT'], $category['ID'], $kw, '', 0, Keygroup::TYPE_MANUAL);
 				$clearCache = true;
 				$result['ADD']++;
 				$result['WORDS'][] = $kw;
@@ -353,13 +360,12 @@ class Category
 		foreach ($byName as $id)
 		{
 			$kg = $keygroups['ITEMS'][$id];
-			if ($kg['BASE'] == '-1')
+			if ($kg['TYPE'] == Keygroup::TYPE_MANUAL)
 			{
 				if ($deactive) {
-					Keygroup::updateBase($id, '-2', '-2');
+					Keygroup::delete($id);
 					$clearCache = true;
-					$result['DEACTIV']++;
-					$result['OLD']++;
+					$result['DELETE']++;
 				}
 				else
 				{
@@ -367,7 +373,7 @@ class Category
 					$result['USER']++;
 				}
 			}
-			elseif ($kg['BASE'] == '-2')
+			elseif ($kg['TYPE'] == Keygroup::TYPE_DEACTIVE)
 				$result['OLD']++;
 			else
 				$result['NEW']++;

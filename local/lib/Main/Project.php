@@ -137,6 +137,37 @@ class Project
 		return self::getProjectsHref() . $id . '/';
 	}
 
+	public static function getTreeByCurrentUser($curPath)
+	{
+		$tree = array();
+
+		$projects = self::getByCurrentUser();
+		foreach ($projects as $project)
+		{
+			$items = array();
+			$categories = Category::getByProject($project['ID']);
+			foreach ($categories as $cat)
+			{
+				$href = Category::getHref($cat);
+				$items[] = array(
+					'NAME' => $cat['NAME'],
+					'HREF' => $href,
+				    'SELECTED' => strpos($curPath, $href) === 0,
+				);
+			}
+
+			$href = self::getHref($project['ID']);
+			$tree[] = array(
+				'NAME' => $project['NAME'],
+				'HREF' => $href,
+				'SELECTED' => strpos($curPath, $href) === 0,
+			    'CATEGORIES' => $items,
+			);
+		}
+
+		return $tree;
+	}
+
 	public static function getHeaderMenu()
 	{
 		ob_start();

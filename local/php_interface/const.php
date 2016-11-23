@@ -1,5 +1,7 @@
 <?
 define ('SITE_NAME', 'Traffo');
+define ('DIRECT_NAME', 'Яндекс.Директ');
+define ('ADWORDS_NAME', 'Google Adwords');
 
 /**
  * ID приложения Context Helper

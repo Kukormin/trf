@@ -1,0 +1,180 @@
+body {
+    font: 14px Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #fff;
+    color: #000
+}
+
+a {
+    text-decoration: none;
+    color: #007800
+}
+
+.dont-break-out {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto
+}
+
+.mobile-only {
+    display: none
+}
+
+.desktop-only {
+    display: block
+}
+
+.page {
+    margin: 20px auto;
+    width: 750px
+}
+
+.page-section {
+    margin: 8px 0 0;
+    position: relative
+}
+
+.page-section:after {
+    content: '';
+    display: block;
+    clear: both
+}
+
+.large-text {
+    font-size: 20px
+}
+
+.separator {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e5e5e5;
+    clear: both
+}
+
+.print-button-container {
+    text-align: center;
+    margin-bottom: 16px
+}
+
+.print-button {
+    padding: 0 15px;
+    line-height: 32px;
+    border-radius: 3px;
+    font-size: 15px;
+    text-decoration: none;
+    border: 1px solid #ccc;
+    display: inline-block;
+    color: #000
+}
+
+.print-button:hover {
+    border-color: #aaa
+}
+
+.print-button__icon {
+    width: 15px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: top;
+    margin: 8px 8px 0 0;
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAQCAYAAADJViUEAAAATElEQVQoz2NgoAAwovH/k6GHaM0o8kwMAwUYifQnVkCRs1mIDUlsgYbN2bi8giHOQmpcEqP5PzkGUpxI/hMbfUzk+JWQ4v/kZAySAAChaA4TS7cRwwAAAABJRU5ErkJggg==) no-repeat
+}
+
+.title {
+    float: left;
+    width: 70%;
+    margin: 0;
+    font-size: 2em
+}
+
+.head-link {
+    float: left;
+    width: 30%;
+    text-align: right;
+    font-size: 2em
+}
+
+.head-link a {
+    font-size: 17px
+}
+
+.description {
+    margin-bottom: 25px
+}
+
+.banner {
+    width: 50%;
+    box-sizing: border-box;
+    padding: 4px 0 4px 32px;
+    border-left: 2px solid #e5e5e5;
+    position: absolute;
+    right: 0;
+    margin-top: -6px;
+    z-index: 100
+}
+
+.banner-title {
+    font-weight: 700;
+    font-size: 17px;
+    margin-bottom: 8px
+}
+
+.banner-title a {
+    color: #2900cf
+}
+
+.banner-content {
+    margin-bottom: 8px
+}
+
+.banner-link a {
+    color: #007800
+}
+
+.contact-item {
+    margin-bottom: 20px;
+    position: relative
+}
+
+.hint {
+    color: gray;
+    margin-bottom: 8px
+}
+
+.work-time {
+    padding: 0;
+    margin: 0;
+    list-style: none
+}
+
+.work-time li div {
+    float: left;
+    width: 80px
+}
+
+.email {
+    color: #000
+}
+
+.map-container {
+    margin: 0 0 25px
+}
+
+.map-container a {
+    color: #000
+}
+
+.map {
+    height: 320px;
+    background-color: #eee;
+    margin-bottom: 4px
+}
+
+@media print {
+    .print-button-container {
+        display: none
+    }
+}

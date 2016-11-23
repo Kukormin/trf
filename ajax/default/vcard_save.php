@@ -26,13 +26,10 @@ if ($project)
 
 	if (!$ex && !$onlyCheck)
 	{
-		$data = array(
-			'CITY' => $_REQUEST['city'],
-		);
 		$newCard = array(
 			'NAME' => $name,
 			'PROJECT' => $project['ID'],
-			'DATA' => $data,
+			'DATA' => $_REQUEST['data'],
 		);
 		if ($cardId)
 		{

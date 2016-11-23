@@ -1,17 +1,19 @@
 <?
 $return = array();
 
-$templId = intval($_REQUEST['tid']);
 $projectId = intval($_REQUEST['pid']);
+$categoryId = intval($_REQUEST['cid']);
+$templId = intval($_REQUEST['tid']);
 $name = trim($_REQUEST['name']);
 $onlyCheck = $_REQUEST['only_check'] == 'Y';
 
 $ex = false;
 
-$project = \Local\Main\Project::getById($projectId);
-if ($project)
+// для проверки авторизации
+$category = \Local\Main\Category::getById($categoryId, $projectId);
+if ($category)
 {
-	$templs = \Local\Main\Templ::getByProject($project['ID']);
+	$templs = \Local\Main\Templ::getByCategory($category['ID']);
 	foreach ($templs as $templ)
 	{
 		if ($templ['ID'] == $templId)
@@ -26,30 +28,62 @@ if ($project)
 
 	if (!$ex && !$onlyCheck)
 	{
+		$construct = array();
+		$base = $category['DATA']['BASE'];
+		foreach ($_REQUEST['c'] as $key => $area)
+		{
+			foreach ($area['p'] as $i => $partKey)
+			{
+				if ($partKey == 'text')
+					$data = $area['text'][$i];
+				elseif ($partKey == 'keyword')
+					$data = '';
+				else
+				{
+					$col = substr($partKey, 3);
+					$data = array();
+					if ($area['col'][$i][0])
+						$data[''] = $area['col'][$i][0];
+					foreach ($base[$col]['WORDS'] as $j => $baseWord)
+					{
+						$word = $area['col'][$i][$j + 1];
+						if ($word != $baseWord)
+							$data[$baseWord] = $word;
+					}
+				}
+
+				$construct[$key][] = array(
+					'KEY' => $partKey,
+					'D' => $data,
+				);
+			}
+		}
 		$data = array(
-			'REPLACE' => $_REQUEST['replace'] == 'on',
-			'TITLE_PLUS' => $_REQUEST['title_plus'] == 'on',
-			'TEXT_TITLE' => $_REQUEST['text_title'] == 'on',
-			'TEXT_TITLE_PLUS' => $_REQUEST['text_title_plus'] == 'on',
-			'TEXT_PLUS' => $_REQUEST['text_plus'] == 'on',
-			'LINKSET' => $_REQUEST['linkset'],
-			'VCARD' => $_REQUEST['vcard'],
+			'CONSTRUCT' => $construct,
+			'TITLE_56' => $_REQUEST['title_56'] == 'on',
+			'TITLE_FIRST_BIG' => $_REQUEST['title_first_big'] == 'on',
+			'TITLE_2_FIRST_BIG' => $_REQUEST['title_2_first_big'] == 'on',
+			'TEXT_FIRST_BIG' => $_REQUEST['text_first_big'] == 'on',
+			'LINKSET' => intval($_REQUEST['linkset']),
+			'VCARD' => intval($_REQUEST['vcard']),
 		);
 		$newTempl = array(
 			'NAME' => $name,
-			'PROJECT' => $project['ID'],
+			'CATEGORY' => $category['ID'],
+			'YANDEX' => intval($_REQUEST['yandex']),
+			'SEARCH' => intval($_REQUEST['search']),
 			'DATA' => $data,
 		);
 
 		if ($templId)
 		{
-			$templ = \Local\Main\Templ::getById($templId, $project['ID']);
+			$templ = \Local\Main\Templ::getById($templId, $category['ID']);
 			$templ = \Local\Main\Templ::update($templ, $newTempl);
 		}
 		else
 			$templ = \Local\Main\Templ::add($newTempl);
 
-		$return['redirect'] = \Local\Main\Templ::getListHref($project['ID']);
+		$return['redirect'] = \Local\Main\Templ::getListHref($category);
 	}
 }
 

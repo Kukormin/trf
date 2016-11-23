@@ -17,9 +17,10 @@ class Parser
 
 		if (!$result)
 		{
-
+			//$url = idn_to_ascii($url);
+			//debugmessage($url);
 			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, idn_to_ascii($url));
+			curl_setopt($ch, CURLOPT_URL, $url);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_ACCEPT_ENCODING, "");
 			curl_setopt($ch, CURLOPT_TRANSFER_ENCODING, 1);

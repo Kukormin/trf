@@ -1,16 +1,16 @@
 <?
 $arUrlRewrite = array(
 	array(
-		"CONDITION" => "#^/projects/([0-9]+)/#",
-		"RULE" => "id=\$1",
+		"CONDITION" => "#/vcard/yandex/(\\d+)/(\\d+)/\$#",
+		"RULE" => "id=\$2&pid=\$1",
 		"ID" => "",
-		"PATH" => "/projects/detail.php",
+		"PATH" => "/vcard/yandex/index.php",
 	),
 	array(
-		"CONDITION" => "#^/ads/([0-9]+)/#",
-		"RULE" => "id=\$1",
-		"ID" => "",
-		"PATH" => "/ads/index.php",
+		"CONDITION" => "#^(.*)\$#",
+		"RULE" => "",
+		"ID" => "tim:nav",
+		"PATH" => "/index.php",
 	),
 );
 

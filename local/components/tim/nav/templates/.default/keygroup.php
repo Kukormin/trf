@@ -9,21 +9,19 @@ $project = $component->project;
 $category = $component->category;
 $keygroup = $component->keygroup;
 
-$typeText = 'Получена из базовых слов';
-$words = '';
-if ($keygroup['BASE'] == -1)
+$typeText = '';
+if ($keygroup['TYPE'] == 0)
 	$typeText = 'Добавлена вручную';
-elseif ($keygroup['BASE'] == -2)
+elseif ($keygroup['TYPE'] == 1)
+	$typeText = 'Получена из базовых слов';
+elseif ($keygroup['TYPE'] == 2)
 	$typeText = 'Деактивирована';
-else
+
+$words = '';
+if ($keygroup['BASE_ARRAY'])
 {
-	$parts = explode(',', $keygroup['BASE']);
-	foreach ($parts as $i => $part)
-	{
-		$word = $category['DATA']['BASE'][$i]['WORDS'][$part - 1];
-		if ($word)
-			$words .= '<br />- ' . $word;
-	}
+	foreach ($keygroup['BASE_ARRAY'] as $i => $part)
+		$words .= '<br />- ' . $part;
 }
 
 $dt = ConvertTimeStamp($keygroup['TS'], "FULL", "ru");
@@ -32,7 +30,7 @@ $ws = $keygroup['WORDSTAT'] == -1 ? 'не проверена' : $keygroup['WORDS
 ?>
 <div class="row-fluid">
 	<div class="span4">
-		<form id="keygroup_detail" class="form-horizontal" data-overlay="1">
+		<form id="keygroup_detail" class="form-horizontal">
 			<input type="hidden" name="pid" value="<?= $projectId ?>">
 			<input type="hidden" name="cid" value="<?= $keygroup['CATEGORY'] ?>">
 			<input type="hidden" name="kgid" value="<?= $keygroup['ID'] ?>">
@@ -64,79 +62,44 @@ $ws = $keygroup['WORDSTAT'] == -1 ? 'не проверена' : $keygroup['WORDS
 					?>
 				</div>
 			</div>
-			<div class="control-group">
-				<label class="control-label">Шаблоны объявлений</label>
-				<div class="controls"><?
-					$templates = \Local\Main\Templ::getByProject($projectId);
-					foreach ($templates as $templ)
-					{
-						$checked = in_array($templ['ID'], $keygroup['TEMPLATES']) ? ' checked' : '';
-						?>
-						<label class="checkbox">
-							<input type="checkbox"<?= $checked ?> name="templ[<?= $templ['ID'] ?>]" />
-							<?= $templ['NAME'] ?>
-						</label><?
-					}
-					?>
-				</div>
-			</div>
-			<?
-
-
-			?>
-			<p>
-				<button class="btn btn-primary" type="button">Сохранить</button>
-				<button class="btn cancel" type="button">Отменить</button>
-			</p>
 			<div class="alerts"></div>
 		</form>
 	</div>
-	<div class="span8"><?
-		foreach ($templates as $templ)
-		{
-			if (in_array($templ['ID'], $keygroup['TEMPLATES']))
+	<div class="span8">
+		<h4>
+			Добавить объявление по шаблону:
+		</h4>
+		<p><?
+
+			$templates = \Local\Main\Templ::getByCategory($category['ID']);
+			foreach ($templates as $templ)
 			{
-				\Local\Main\Ad::createByTempl($keygroup['NAME'], $templ, $category, $project);
-				/*?>
-				<div class="example"><?= $?>
-				<div class="yandex-serp">
-					<h2>
-						<a class="link" target="_blank" href="http://<?= $project['URL'] ?>">
-							<span class="favicon"></span>
-							Заголовок <b>объявления</b>! / <?= $project['URL'] ?>
-						</a>
-					</h2>
-					<div class="subtitle">
-						<div class="path">
-							<a class="link" target="_blank" href="http://<?= $project['URL'] ?>"><?= $project['URL'] ?>/<b>объявление</b>/</a>
-						</div>
-						<div class="lbl">Реклама</div>
-					</div>
-					<div class="content">
-						<div class="text">Текст <b>объявления</b>. 5 лет гарантии! Звони!</div>
-						<div class="sitelinks"><?
-
-							for ($i = 1; $i < 5; $i++)
-							{
-								$item = $set['DATA']['ITEMS'][$i - 1];
-								$hidden = $item['Title'] ? '' : ' class="hidden"';
-								?>
-							<div id="yandex<?= $i ?>"<?= $hidden ?>>
-								<a target="_blank" href="http://<?= $project['URL'] ?><?= $item['Href'] ?>"><?= $item['Title'] ?></a>
-								</div><?
-							}
-
-							?>
-						</div>
-						<div class="meta">
-							<div>
-								<a class="link" target="_blank" href="#">Контактная информация</a>
-							</div><div>+7 (9999) 99-99-99</div><div>пн-пт 8:00-22:00, сб-вс 8:15-22:00</div>
-						</div>
-					</div>
-				</div>
-				</div><?*/
+				?>
+				<a href="<?= \Local\Main\Ad::getAddTemplHref($category, $keygroup, $templ) ?>"
+				   class="btn add-ad" type="button"><?= $templ['NAME']?></a><?
 			}
+
+			?>
+		</p>
+		<h4>
+			Создать объявление вручную:
+		</h4>
+		<p>
+			<a href="<?= \Local\Main\Ad::getAddYandexHref($category, $keygroup) ?>"
+			   class="btn add-ad" type="button">Для <?= DIRECT_NAME ?></a>
+			<a href="<?= \Local\Main\Ad::getAddGoogleHref($category, $keygroup) ?>"
+			   class="btn add-ad" type="button">Для <?= ADWORDS_NAME ?></a>
+		</p><?
+
+		$ads = \Local\Main\Ad::getByKeygroup($keygroup['ID']);
+		foreach ($ads as $ad)
+		{
+			$ad['HOST'] = $project['URL'];
+			$ad['SCHEME'] = $category['DATA']['SCHEME'];
+			\Local\Main\Ad::printExample($ad);
+
+			$href = \Local\Main\Ad::getHref($category, $keygroup, $ad);
+			?><p><a href="<?= $href ?>">Редактировать</a></p><?
 		}
 		?>
 	</div>

@@ -35,7 +35,7 @@
 
 						if ($USER->IsAuthorized())
 						{
-							$APPLICATION->AddBufferContent(Array('\Local\Project', "getHeaderMenu"));
+							$APPLICATION->AddBufferContent(Array('\Local\Main\Project', "getHeaderMenu"));
 						}
 
 						?>
@@ -85,5 +85,13 @@
 		$APPLICATION->IncludeComponent('bitrix:breadcrumb', '', Array());
 
 		?>
-		<h1><? $APPLICATION->ShowTitle(false, false); ?></h1>
+		<div class="row-fluid">
+			<div class="span2"><?
+
+				$APPLICATION->IncludeComponent('tim:empty', 'nav_tree', Array());
+
+				?>
+			</div>
+			<div class="span10">
+				<h1><? $APPLICATION->ShowTitle(false, false); ?></h1>
 

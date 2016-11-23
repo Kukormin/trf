@@ -1,6 +1,7 @@
 <?
 namespace Components;
 
+use Local\Main\Ad;
 use Local\Main\Category;
 use Local\Main\Keygroup;
 use Local\Main\Linkset;
@@ -27,6 +28,7 @@ class Navigaton extends \CBitrixComponent
 	public $card = array();
 	public $templ = array();
 	public $keygroup = array();
+	public $ad = array();
 
 	public function addNav($href, $title, $bc = false, $tab = false)
 	{
@@ -122,18 +124,101 @@ class Navigaton extends \CBitrixComponent
 						$this->tabCode = $parts[5];
 
 						// Ключевая фраза
-						if ($parts[5] == Keygroup::URL)
+						if ($parts[5] == Keygroup::URL && $parts[6])
 						{
 							$template = 'keygroup';
 
-							$this->keygroup = Keygroup::getById($parts[6], $categoryId, $this->projectId);
+							$keygroupId = $parts[6];
+							$this->keygroup = Keygroup::getById($keygroupId, $categoryId, $this->projectId);
 							if (!$this->keygroup)
 							{
 								$APPLICATION->IncludeFile('/inc/404.php');
 								return;
 							}
 
-							$this->addNav('', $this->keygroup['NAME']);
+							$this->addNav(Keygroup::getHref($this->category, $this->keygroup), $this->keygroup['NAME']);
+
+							// Категория
+							if ($parts[7] == Ad::URL)
+							{
+								$template = 'ad';
+
+								if ($parts[8] == 'ynew')
+								{
+									$this->ad = array(
+										'YANDEX' => 1,
+										'SEARCH' => 1,
+									);
+									$this->addNav('', 'Добавление объявления для ' . DIRECT_NAME);
+								}
+								elseif ($parts[8] == 'gnew')
+								{
+									$this->ad = array(
+										'YANDEX' => 0,
+										'SEARCH' => 1,
+									);
+									$this->addNav('', 'Добавление объявления для ' . ADWORDS_NAME);
+								}
+								elseif ($parts[8] == 'new')
+								{
+									$this->templ = Templ::getById($parts[9], $categoryId);
+									if (!$this->templ)
+									{
+										$APPLICATION->IncludeFile('/inc/404.php');
+										return;
+									}
+
+									$this->ad = Ad::generateByTemplate($this->keygroup, $this->templ,
+										$this->category, $this->project['URL']);
+									$this->addNav('', 'Добавление объявления по шаблону "' . $this->templ['NAME'] . '"');
+								}
+								else
+								{
+									$this->ad = Ad::getById($parts[8], $keygroupId);
+									if (!$this->ad)
+									{
+										$APPLICATION->IncludeFile('/inc/404.php');
+										return;
+									}
+
+									$this->addNav('', $this->ad['TITLE']);
+								}
+							}
+						}
+						// Шаблон
+						elseif ($parts[5] == Templ::URL && $parts[6])
+						{
+							$template = 'templ';
+
+							$this->addNav(Templ::getListHref($this->category), 'Шаблоны объявлений');
+
+							if ($parts[6] == 'ynew')
+							{
+								$this->templ = array(
+									'YANDEX' => 1,
+									'SEARCH' => 1,
+								);
+								$this->addNav('', 'Добавление шаблона для ' . DIRECT_NAME);
+							}
+							elseif ($parts[6] == 'gnew')
+							{
+								$this->templ = array(
+									'YANDEX' => 0,
+									'SEARCH' => 1,
+								);
+								$this->addNav('', 'Добавление шаблона для ' . ADWORDS_NAME);
+							}
+							else
+							{
+								$this->templ = Templ::getById($parts[6], $categoryId);
+								if (!$this->templ)
+								{
+									$APPLICATION->IncludeFile('/inc/404.php');
+									return;
+								}
+
+								$this->addNav('', $this->templ['NAME']);
+							}
 						}
 					}
 				}
@@ -181,29 +266,6 @@ class Navigaton extends \CBitrixComponent
 						}
 
 						$this->addNav('', $this->card['NAME']);
-					}
-				}
-				// Визитки
-				elseif ($parts[3] == Templ::URL && $parts[4])
-				{
-					$template = 'templ';
-
-					$this->addNav(Templ::getListHref($this->projectId), 'Шаблоны объявлений');
-
-					if ($parts[4] == 'new')
-					{
-						$this->addNav('', 'Добавление шаблона');
-					}
-					else
-					{
-						$this->templ = Templ::getById($parts[4], $this->projectId);
-						if (!$this->templ)
-						{
-							$APPLICATION->IncludeFile('/inc/404.php');
-							return;
-						}
-
-						$this->addNav('', $this->templ['NAME']);
 					}
 				}
 			}

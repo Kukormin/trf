@@ -16,8 +16,11 @@ include "default/$action.php";
 
 if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest')
 {
-	header('Content-Type: application/json');
-	echo json_encode($return);
+	if ($return !== '')
+	{
+		header('Content-Type: application/json');
+		echo json_encode($return);
+	}
 }
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_after.php");

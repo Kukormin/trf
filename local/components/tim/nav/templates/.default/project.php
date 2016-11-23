@@ -23,7 +23,6 @@ else
 		'phrase' => 'Ключевые фразы',
 		'links' => 'Быстрые ссылки',
 		'vcards' => 'Визитки',
-		'templates' => 'Шаблоны объявлений',
 		'settings' => 'Настройки',
 	);
 	if (!$tabs[$tabCode])
@@ -266,43 +265,6 @@ foreach ($tabs as $code => $name)
 		?>
 		<p>
 			<a href="<?= $href ?>" class="btn btn-primary" type="button">Добавить визитку</a>
-		</p>
-	<?
-	}
-	//
-	// ---------------------------------------------------
-	//
-	elseif ($code == 'templates')
-	{
-		?>
-		<table id="templates" class="table table-striped table-hover">
-		<thead>
-		<tr>
-			<th>Название</th>
-			<th>Данные</th>
-		</tr>
-		</thead>
-		<tbody><?
-
-		$cards = \Local\Main\Templ::getByProject($projectId);
-		foreach ($cards as $card)
-		{
-			$href = \Local\Main\Templ::getHref($card);
-			?>
-			<tr>
-			<td><a href="<?= $href ?>"><?= $card['NAME'] ?></a></td>
-			<td></td>
-			</tr><?
-		}
-
-		?>
-		</tbody>
-		</table><?
-
-		$href = \Local\Main\Templ::getAddHref($projectId);
-		?>
-		<p>
-			<a href="<?= $href ?>" class="btn btn-primary" type="button">Добавить шаблон</a>
 		</p>
 	<?
 	}

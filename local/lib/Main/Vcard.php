@@ -24,6 +24,11 @@ class Vcard
 	 */
 	const URL = 'vcards';
 
+	/**
+	 * Урл для быстрого просмотра
+	 */
+	const QURL = '/vcard/';
+
 	public static function getByProject($projectId, $refreshCache = false)
 	{
 		$projectId = intval($projectId);
@@ -90,6 +95,16 @@ class Vcard
 		return self::getListHref($card['PROJECT']) . $card['ID'] . '/';
 	}
 
+	public static function getYandexHref($cardId, $projectId)
+	{
+		return self::QURL . 'yandex/' . $projectId . '/' . $cardId . '/';
+	}
+
+	public static function getGoogleHref($cardId, $projectId)
+	{
+		return self::QURL . 'google/' . $projectId . '/' . $cardId . '/';
+	}
+
 	public static function add($newCard)
 	{
 		$projectId = $newCard['PROJECT'];
@@ -149,6 +164,83 @@ class Vcard
 		}
 
 		return $card;
+	}
+
+	public static function getRegimeParts($yandexRegime)
+	{
+		$return = array();
+
+		$days = array('пн','вт','ср','чт','пт','сб','вс');
+		$wt = explode(';', $yandexRegime);
+		$l = count($wt);
+		for ($i = 0; $i < $l; $i += 6)
+		{
+			$from = $wt[$i];
+			$to = $wt[$i + 1];
+			$t = $wt[$i + 2] . ':' . $wt[$i + 3] . '-' . $wt[$i + 4] . ':' . $wt[$i + 5];
+			if ($from == $to)
+				$d = $days[$from];
+			else
+				$d = $days[$from] . '-' . $days[$to];
+			$return[] = array($d, $t);
+		}
+
+		return $return;
+	}
+
+	public static function getRegime($card)
+	{
+		$regime = self::getRegimeParts($card['DATA']['WorkTime']);
+		$r = '';
+		foreach ($regime as $item)
+		{
+			if ($r)
+				$r .= ', ';
+			$r .=  $item[0] . ' ' . $item[1];
+		}
+		return $r;
+	}
+
+	public static function getMondayRegime($card)
+	{
+		$regime = self::getRegimeParts($card['DATA']['WorkTime']);
+		return $regime[0][1];
+	}
+
+	public static function getPhone($card)
+	{
+		$phone = $card['DATA']['Phone']['CountryCode'] .
+			' (' . $card['DATA']['Phone']['CityCode'] . ') ' .
+			$card['DATA']['Phone']['PhoneNumber'];
+		if ($card['DATA']['Phone']['Extension'])
+			$phone .= ' доб.' . $card['DATA']['Phone']['Extension'];
+
+		return $phone;
+	}
+
+	public static function getAddress($card)
+	{
+		$address = $card['DATA']['Street'];
+		if ($card['DATA']['House'])
+		{
+			if ($address)
+				$address .= ', ';
+			$address .= 'д.' . $card['DATA']['House'];
+		}
+		if ($card['DATA']['Building'])
+		{
+			if ($address)
+				$address .= ', ';
+			$address .= 'к.' . $card['DATA']['Building'];
+		}
+		if ($card['DATA']['City'])
+		{
+			if ($address)
+				$address .= ', ';
+			$address .= $card['DATA']['City'];
+		}
+
+		return $address;
 	}
 
 }

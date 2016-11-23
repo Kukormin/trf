@@ -9,7 +9,7 @@ $project = $component->project;
 $set = $component->set;
 
 ?>
-<form id="linkset_detail" class="form-horizontal" data-overlay="1">
+<form id="linkset_detail" class="form-horizontal">
 	<input type="hidden" name="pid" value="<?= $projectId ?>">
 	<input type="hidden" name="sid" value="<?= $set['ID'] ?>">
 	<input type="hidden" name="project_url" value="<?= $project['URL'] ?>">

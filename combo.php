@@ -3,6 +3,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/header.php");
 $APPLICATION->SetTitle("Комбинации слов");
 
 $assetInstance = \Bitrix\Main\Page\Asset::getInstance();
+$assetInstance->addJs(SITE_TEMPLATE_PATH . '/js/jquery.js');
 $assetInstance->addJs(SITE_TEMPLATE_PATH . '/js/ZeroClipboard.min.js');
 
 ?>
@@ -41,6 +42,8 @@ $assetInstance->addJs(SITE_TEMPLATE_PATH . '/js/ZeroClipboard.min.js');
 	</p>
 <div id="result"></div>
 
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/jquery.js"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/ZeroClipboard.min.js"></script>
 <script>
 	$(document).ready(function() {
 		var i = 1;

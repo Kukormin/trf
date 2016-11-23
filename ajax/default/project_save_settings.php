@@ -3,7 +3,9 @@ $return = array();
 
 $projectId = intval($_REQUEST['pid']);
 $name = trim($_REQUEST['name']);
-$url = trim($_REQUEST['url']);
+$url = trim($_REQUEST['host']);
+if (!$url)
+	$url = trim($_REQUEST['url']);
 $onlyCheck = $_REQUEST['only_check'] == 'Y';
 
 $ex = false;

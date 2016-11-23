@@ -35,9 +35,13 @@ for ($i = 0; $i < $l; $i += 6)
 	}
 }
 
+$hiddenInputName = 'regime';
+if ($arParams['NAME'])
+	$hiddenInputName = $arParams['NAME'];
+
 ?>
-<input type="hidden" name="regime" id="regime" value="<?= $strValue ?>" />
-<div id="regime_controls"><?
+<input class="required" type="hidden" name="<?= $hiddenInputName ?>" value="<?= $strValue ?>" />
+<div class="cont"><?
 	foreach ($tmp as $part)
 	{
 		?><div class="regime_part"><?
@@ -65,7 +69,7 @@ for ($i = 0; $i < $l; $i += 6)
 				{
 					$selected = $part['TIME'][1] === $val ? ' selected' : '';
 					?>
-					<option><?= $val ?></option><?
+					<option<?= $selected ?>><?= $val ?></option><?
 				}
 				?>
 			</select> —
@@ -85,7 +89,7 @@ for ($i = 0; $i < $l; $i += 6)
 				{
 					$selected = $part['TIME'][3] === $val ? ' selected' : '';
 					?>
-					<option><?= $val ?></option><?
+					<option<?= $selected ?>><?= $val ?></option><?
 				}
 				?>
 			</select>

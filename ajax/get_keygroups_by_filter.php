@@ -10,7 +10,9 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 	if ($category)
 	{
 		$ids = array();
-		$params = \Local\Main\Keygroup::getParamsForGetList();
+		$filters = \Local\Main\Keygroup::getFilters();
+		$view = \Local\Main\Keygroup::getViewSetting();
+		$params = \Local\Main\Keygroup::getParamsForGetList($filters, $view);
 		if ($_REQUEST['action'])
 		{
 			$actionParams = array(
@@ -41,28 +43,29 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 				\Local\Main\Keygroup::clearCache($_REQUEST['pid'], $_REQUEST['cid']);
 		}
 		$keygroups = \Local\Main\Keygroup::getList($category['PROJECT'], $category['ID'], $params);
-		?>
 
+		$type = $filters['type']['VALUE'];
+		$textView = $view['style']['VALUE'] == 't';
+		$max = intval($view['cnt']['VALUE']);
+
+		?>
 		<table class="table table-striped table-hover" data-all="<?= $keygroups['NAV']['ITEMS_COUNT'] ?>">
 			<thead>
 			<tr>
 				<th></th>
-				<th>ID</th>
+				<th></th>
 				<th></th>
 				<th>Ключевая фраза</th>
 				<th></th>
 				<th>W</th>
 				<th>Метки</th>
-				<th></th>
-				<th></th>
-				<th></th>
-				<th></th>
+				<th colspan="2">Заголовок</th>
+				<th>Текст</th>
 				<th></th>
 				<th></th>
 			</tr>
 			</thead>
 			<tbody><?
-
 
 			foreach ($keygroups['ITEMS'] as $item)
 			{
@@ -77,22 +80,91 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 				$checked = '';
 				if ($_REQUEST['ids'] == 'all' || in_array($item['ID'], $ids))
 					$checked = ' checked';
-				?>
-				<tr>
-				<td><input class="select_item" type="checkbox" id="<?= $item['ID'] ?>"<?= $checked ?> /></td>
-				<td><?= $item['ID'] ?></td>
-				<td><?= $item['BASE'] ?></td>
-				<td><a href="<?= $href ?>"><?= $item['NAME'] ?></a></td>
-				<td><?= strlen($item['NAME']) ?></td>
-				<td><?= $item['WORDSTAT'] ?></td>
-				<td><?= $marks ?></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				<td></td>
-				</tr><?
+
+				$title = '';
+				$text = '';
+				$firstAd = false;
+
+				$ads = \Local\Main\Ad::getByKeygroup($item['ID']);
+				$fads = array();
+				$cnt = 0;
+				foreach ($ads as $ad)
+				{
+					if ($type['y'] && $ad['YANDEX'] || $type['g'] && !$ad['YANDEX'])
+						if ($type['s'] && $ad['SEARCH'] || $type['n'] && !$ad['SEARCH'])
+						{
+							$fads[] = $ad;
+							$cnt++;
+							if ($max && $cnt >= $max)
+								break;
+						}
+				}
+
+				$rspan = count($fads);
+				$rs = $textView && $rspan > 1 ? ' rowspan="' . $rspan . '"' : '';
+
+				if ($textView)
+				{
+					if (!$rspan)
+						$fads[] = array();
+
+					foreach ($fads as $i => $ad)
+					{
+						?>
+						<tr><?
+						if (!$i)
+						{
+							?>
+							<td<?= $rs ?>><input class="select_item" type="checkbox"
+							                     id="<?= $item['ID'] ?>"<?= $checked ?> /></td>
+							<td<?= $rs ?>></td>
+							<td<?= $rs ?>></td>
+							<td<?= $rs ?>><a href="<?= $href ?>"><?= $item['NAME'] ?></a></td>
+							<td<?= $rs ?>><?= strlen($item['NAME']) ?></td>
+							<td<?= $rs ?>><?= $item['WORDSTAT'] ?></td>
+							<td<?= $rs ?>><?= $marks ?></td><?
+						}
+						?>
+						<td><?= $ad['TITLE'] ?></td>
+						<td><?= $ad['TITLE_2'] ?></td>
+						<td><?= $ad['TEXT'] ?></td><?
+						if (!$i)
+						{
+							?>
+							<td<?= $rs ?>></td>
+							<td<?= $rs ?>></td><?
+						}
+						?>
+						</tr><?
+					}
+				}
+				else
+				{
+					?>
+					<tr>
+						<td<?= $rs ?>><input class="select_item" type="checkbox" id="<?= $item['ID'] ?>"<?= $checked ?> />
+						</td>
+						<td<?= $rs ?>></td>
+						<td<?= $rs ?>></td>
+						<td<?= $rs ?>><a href="<?= $href ?>"><?= $item['NAME'] ?></a></td>
+						<td<?= $rs ?>><?= strlen($item['NAME']) ?></td>
+						<td<?= $rs ?>><?= $item['WORDSTAT'] ?></td>
+						<td<?= $rs ?>><?= $marks ?></td>
+						<td colspan="3"><?
+
+							foreach ($fads as $ad)
+							{
+								$ad['HOST'] = $project['URL'];
+								$ad['SCHEME'] = $category['DATA']['SCHEME'];
+								\Local\Main\Ad::printExample($ad);
+							}
+
+							?>
+						</td>
+						<td<?= $rs ?>></td>
+						<td<?= $rs ?>></td>
+					</tr><?
+				}
 			}
 
 			?>
@@ -117,19 +189,6 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 				$iFinish = $iEnd;
 			}
 
-			$iStart1 = $iCur - 2;
-			$iFinish1 = $iCur + 2;
-			if ($iStart1 < 1) {
-				$iFinish1 -= $iStart1 - 1;
-				$iStart1 = 1;
-			}
-			if ($iFinish1 > $iEnd) {
-				$iStart1 -= $iFinish1 - $iEnd;
-				if ($iStart1 < 1) {
-					$iStart1 = 1;
-				}
-				$iFinish1 = $iEnd;
-			}
 			?>
 			<div class="pagination">
 				<ul><?
@@ -148,7 +207,6 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 							<li class="active"><a href="#">1</a></li><?
 						}
 						else {
-							$sHref = $GLOBALS['APPLICATION']->GetCurPageParam("page=1", array("page"));
 							?>
 							<li><a href="#" data-page="1">1</a></li><?
 						}

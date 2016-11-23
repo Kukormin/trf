@@ -24,13 +24,13 @@ class Templ
 	 */
 	const URL = 'templates';
 
-	public static function getByProject($projectId, $refreshCache = false)
+	public static function getByCategory($categoryId, $refreshCache = false)
 	{
-		$projectId = intval($projectId);
+		$categoryId = intval($categoryId);
 		$extCache = new ExtCache(
 			array(
 				__FUNCTION__,
-				$projectId,
+				$categoryId,
 			),
 			static::CACHE_PATH . __FUNCTION__ . '/',
 			864000,
@@ -47,7 +47,7 @@ class Templ
 			$dataClass = $entity->getDataClass();
 			$rsItems = $dataClass::getList(array(
 				'filter' => array(
-					'UF_PROJECT' => $projectId,
+					'UF_CATEGORY' => $categoryId,
 				),
 			));
 			$return = array();
@@ -57,7 +57,9 @@ class Templ
 				$return[$id] = array(
 					'ID' => $id,
 					'NAME' => $item['UF_NAME'],
-					'PROJECT' => intval($item['UF_PROJECT']),
+					'YANDEX' => intval($item['UF_YANDEX']),
+					'SEARCH' => intval($item['UF_SEARCH']),
+					'CATEGORY' => intval($item['UF_CATEGORY']),
 					'DATA_ORIG' => $item['UF_DATA'],
 					'DATA' => json_decode($item['UF_DATA'], true),
 				);
@@ -69,33 +71,39 @@ class Templ
 		return $return;
 	}
 
-	public static function getById($id, $projectId)
+	public static function getById($id, $categoryId)
 	{
-		$all = self::getByProject($projectId);
+		$all = self::getByCategory($categoryId);
 		return $all[$id];
 	}
 
-	public static function getListHref($projectId)
+	public static function getListHref($category)
 	{
-		return Project::getHref($projectId) . self::URL . '/';
+		return Category::getHref($category) . self::URL . '/';
 	}
 
-	public static function getAddHref($projectId)
+	public static function getAddYandexHref($category)
 	{
-		return self::getListHref($projectId) . 'new/';
+		return self::getListHref($category) . 'ynew/';
 	}
 
-	public static function getHref($templ)
+	public static function getAddGoogleHref($category)
 	{
-		return self::getListHref($templ['PROJECT']) . $templ['ID'] . '/';
+		return self::getListHref($category) . 'gnew/';
+	}
+
+	public static function getHref($templ, $category)
+	{
+		return self::getListHref($category) . $templ['ID'] . '/';
 	}
 
 	public static function add($newTempl)
 	{
-		$projectId = $newTempl['PROJECT'];
+		$categoryId = $newTempl['CATEGORY'];
 		$data = array();
 		$data['UF_NAME'] = $newTempl['NAME'];
-		$data['UF_PROJECT'] = $projectId;
+		$data['UF_YANDEX'] = $newTempl['YANDEX'];
+		$data['UF_CATEGORY'] = $categoryId;
 		$data['UF_DATA'] = json_encode($newTempl['DATA'], JSON_UNESCAPED_UNICODE);
 
 		$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
@@ -104,8 +112,8 @@ class Templ
 		$result = $dataClass::add($data);
 		$id = $result->getId();
 
-		self::getByProject($projectId, true);
-		$template = self::getById($id, $projectId);
+		self::getByCategory($categoryId, true);
+		$template = self::getById($id, $categoryId);
 		$template['NEW'] = true;
 		return $template;
 	}
@@ -117,14 +125,20 @@ class Templ
 		$dataClass = $entity->getDataClass();
 		$dataClass::delete($templ['ID']);
 
-		self::getByProject($templ['PROJECT'], true);
+		self::getByCategory($templ['CATEGORY'], true);
 	}
 
 	public static function update($templ, $newTempl)
 	{
 		$update = array();
+
 		if (isset($newTempl['NAME']) && $newTempl['NAME'] != $templ['NAME'])
 			$update['UF_NAME'] = $newTempl['NAME'];
+		if (isset($newTempl['YANDEX']) && $newTempl['YANDEX'] != $templ['YANDEX'])
+			$update['UF_YANDEX'] = $newTempl['YANDEX'];
+		if (isset($newTempl['SEARCH']) && $newTempl['SEARCH'] != $templ['SEARCH'])
+			$update['UF_SEARCH'] = $newTempl['SEARCH'];
+
 		if ($newTempl['DATA'])
 		{
 			$newData = $templ['DATA'];
@@ -143,19 +157,19 @@ class Templ
 			$dataClass = $entity->getDataClass();
 			$dataClass::update($templ['ID'], $update);
 
-			self::getByProject($templ['PROJECT'], true);
-			$templ = self::getById($templ['ID'], $templ['PROJECT']);
+			self::getByCategory($templ['CATEGORY'], true);
+			$templ = self::getById($templ['ID'], $templ['CATEGORY']);
 			$templ['UPDATED'] = true;
 		}
 
 		return $templ;
 	}
 
-	public static function printDropdown($projectId)
+	public static function printDropdown($categoryId)
 	{
 		?>
 		<ul class="dropdown-menu"><?
-		$items = self::getByProject($projectId);
+		$items = self::getByCategory($categoryId);
 		foreach ($items as $item)
 		{
 			?>
@@ -163,6 +177,58 @@ class Templ
 		}
 		?>
 		</ul><?
+	}
+
+	private static function addPart($s, $part, $max)
+	{
+		$f = $part[0];
+		$punct = $f == '!' || $f == '.' || $f == '?' || $f == ',' || $f == ':' || $f == ';';
+		$add = '';
+		if ($s && !$punct)
+			$add = ' ';
+		$add .= $part;
+		$new = $s . $add;
+		if (strlen($new) > $max)
+			return false;
+
+		return $new;
+	}
+
+	public static function constructParts($keygroup, $parts, $max)
+	{
+		$return = '';
+
+		$base = $keygroup['BASE_ARRAY'];
+		if (!$base)
+			$base = explode(' ', $keygroup['NAME']);
+
+		foreach ($parts as $part)
+		{
+			if ($part['KEY'] == 'text')
+			{
+				$return = self::addPart($return, $part['D'], $max);
+			}
+			elseif ($part['KEY'] == 'keyword')
+			{
+				foreach ($base as $word)
+					$return = self::addPart($return, $word, $max);
+			}
+			else
+			{
+				// Фраза сгенерирована из базовых слов
+				if ($keygroup['TYPE'] != 0)
+				{
+					$col = substr($part['KEY'], 3);
+					$word = $base[$col];
+					if ($part['D'][$word])
+						$word = $part['D'][$word];
+					if ($word)
+						$return = self::addPart($return, $word, $max);
+				}
+			}
+		}
+
+		return $return;
 	}
 
 }

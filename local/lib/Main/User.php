@@ -9,6 +9,11 @@ class User
 	const INTERFACE_SIMPLE = 1;
 	const INTERFACE_EXTENDED = 2;
 
+	/**
+	 * @var bool Пользователь
+	 */
+	private static $user = false;
+
 	public static function getCurrentUserId()
 	{
 		$user = new \CUser();
@@ -17,21 +22,53 @@ class User
 
 	public static function getCurrentUser()
 	{
-		$return = [];
-		$user = new \CUser();
-		$userId = $user->GetID();
-		if ($userId)
+		if (self::$user === false)
 		{
-			$rs = $user->GetByID($userId);
-			$return = $rs->Fetch();
-			$return['INTERFACE'] = array(
-				'SIMPLE' => $return['UF_INTERFACE'] == 1,
-				'EXTENDED' => $return['UF_INTERFACE'] == 2,
-			    'NONE' => !$return['UF_INTERFACE'],
-			);
+			$u = new \CUser();
+			$userId = $u->GetID();
+			if ($userId)
+			{
+				$rs = $u->GetByID($userId);
+				$user = $rs->Fetch();
+				if (!$user['UF_DATA'])
+					$user['UF_DATA'] = '{}';
+				self::$user = array(
+					'ID' => $userId,
+					'NAME' => $user['NAME'],
+					'INTERFACE' => array(
+						'SIMPLE' => $user['UF_INTERFACE'] == 1,
+						'EXTENDED' => $user['UF_INTERFACE'] == 2,
+						'NONE' => !$user['UF_INTERFACE'],
+					),
+					'UF_DATA' => $user['UF_DATA'],
+					'DATA' => json_decode($user['UF_DATA'], true),
+				);
+			}
+			else
+				self::$user = array();
 		}
 
-		return $return;
+		return self::$user;
+	}
+
+	public static function saveData($new)
+	{
+		self::getCurrentUser();
+
+		$data = self::$user['DATA'];
+		foreach ($new as $key => $value)
+			$data[$key] = $value;
+
+		$encoded = json_encode($data, JSON_UNESCAPED_UNICODE);
+
+		if (self::$user['UF_DATA'] != $encoded)
+		{
+			$u = new \CUser();
+			$u->Update(self::$user['ID'], array(
+				'UF_DATA' => $encoded,
+			));
+			self::$user['DATA'] = $data;
+		}
 	}
 
 	public static function setInterface($t)

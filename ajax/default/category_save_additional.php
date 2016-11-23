@@ -31,7 +31,7 @@ if ($category)
 		<ul>
 			<li>Добавлено дополнительных фраз: <b><?= $result['ADD'] ?></b></li>
 			<li>Активировано старых: <b><?= $result['ACTIV'] ?></b></li>
-			<li>Деактивировано: <b><?= $result['DEACTIV'] ?></b></li>
+			<li>Удалено: <b><?= $result['DELETE'] ?></b></li>
 			<li>Фраза уже является базовой: <b><?= $result['BASE'] ?></b></li>
 			<li>Без изменения: <b><?= $result['NO'] ?></b></li>
 		</ul>
