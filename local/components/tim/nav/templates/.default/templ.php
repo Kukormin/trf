@@ -243,12 +243,21 @@ $templ = $component->templ;
 					?>
 				</select>
 			</div>
-		</div>
+		</div><?
+
+		if ($templ['YANDEX'])
+		{
+			$isSearch = $templ['SEARCH'];
+			$picId = $templ['DATA']['PICTURE'];
+			include('pic.php');
+		}
+
+		?>
 	</fieldset><?
 
 	?>
 	<p>
-		<button class="btn btn-primary" type="button">Сохранить</button>
+		<button class="btn btn-primary save-btn" type="button">Сохранить</button>
 		<button class="btn cancel" type="button">Отменить</button>
 	</p>
 	<div class="alerts"></div>

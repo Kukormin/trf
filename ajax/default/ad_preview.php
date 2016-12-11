@@ -21,6 +21,7 @@ if ($category)
 		'LINK_2' => htmlspecialchars($_REQUEST['link_2']),
 		'LINKSET' => intval($_REQUEST['linkset']),
 		'VCARD' => intval($_REQUEST['vcard']),
+		'PICTURE' => intval($_REQUEST['picture']),
 		'PROJECT' => $projectId,
 		'CATEGORY' => $categoryId,
 		'GROUP' => $keygroupId,

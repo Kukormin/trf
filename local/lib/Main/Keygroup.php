@@ -47,22 +47,6 @@ class Keygroup
 	 * @var array настройки панели фильтров
 	 */
 	private static $FILTER_SETTINGS = array(
-		'type' => array(
-			'NAME' => 'Площадка',
-			'TYPE' => 'checkbox',
-			'VARS' => array(
-				'y' => 'Яндекс',
-				'g' => 'Google',
-				's' => 'Поиск',
-				'n' => 'Сети',
-			),
-			'VALUE' => array(
-				'y' => 1,
-				'g' => 1,
-				's' => 1,
-				'n' => 1,
-			),
-		),
 		'txt' => array(
 			'NAME' => 'Содержит в себе текст',
 			'TYPE' => 'text',
@@ -134,92 +118,69 @@ class Keygroup
 	);
 
 	/**
+	 * @var array Количество элементов на странице
+	 */
+	private static $PAGE_SIZES = array(
+		'20' => '20',
+		'50' => '50',
+		'100' => '100',
+		'500' => '500',
+		'all' => 'все',
+	);
+
+	/**
 	 * @var array настройки вида ключевых фраз
 	 */
-	private static $VIEW_SETTINGS = array(
-		'style' => array(
-			'NAME' => 'Вид объявлений:',
-			'TYPE' => 'radio',
-			'VARS' => array(
-				't' => 'Текст',
-				'p' => 'Предварительный просмотр',
-			),
-			'VALUE' => 't',
+	private static $YGSN = array(
+		'y' => array(
+			'NAME' => 'Яндекс',
+			'VALUE' => 1,
 		),
-		'cnt' => array(
-			'NAME' => 'Количество объявлений для фразы:',
-			'TYPE' => 'radio',
-			'VARS' => array(
-				'0' => 'Все',
-				'1' => 'Только первое',
-				'2' => 'Первые два',
-			),
-			'VALUE' => 't',
+		'g' => array(
+			'NAME' => 'Google',
+			'VALUE' => 1,
 		),
-		'sort' => array(
-			'NAME' => 'Сортировать:',
-			'TYPE' => 'select',
-			'VARS' => array(
-				'ida' => 'по дате создания (сначала старые)',
-				'idd' => 'по дате создания (сначала новые)',
-				'wsa' => 'по возрастанию частотности',
-				'wsd' => 'по убыванию частотности',
-			),
-			'VALUE' => '0',
+		's' => array(
+			'NAME' => 'Поиск',
+			'VALUE' => 1,
 		),
-		'size' => array(
-			'NAME' => 'Элементов на странице:',
-			'TYPE' => 'select',
-			'VARS' => array(
-				'20' => '20',
-				'50' => '50',
-				'100' => '100',
-				'500' => '500',
-				'all' => 'все',
-			),
-			'VALUE' => '20',
+		'n' => array(
+			'NAME' => 'Сети',
+			'VALUE' => 1,
 		),
 	);
 
-	public static function getViewSetting()
+	public static function getPageSizes()
 	{
 		$user = User::getCurrentUser();
 
-		$selected = array();
+		$size = intval($_REQUEST['size']);
+		if (!$size)
+			$size = $user['DATA']['PAGE_SIZE'];
+		if (!$size)
+			foreach (self::$PAGE_SIZES as $k => $v)
+			{
+				$size = $k;
+				break;
+			}
 
-		$return = array();
-		foreach (self::$VIEW_SETTINGS as $code => $item)
+		if ($size && $user['DATA']['PAGE_SIZE'] != $size)
 		{
-			if ($_REQUEST['mode'] == 'ajax')
-			{
-				if ($item['TYPE'] == 'text')
-				{
-					$item['VALUE'] = htmlspecialchars($_REQUEST[$code]);
-				}
-				elseif ($item['TYPE'] == 'checkbox')
-				{
-					foreach ($item['VARS'] as $k => $v)
-						$item['VALUE'][$k] = $_REQUEST[$code][$k] ? 1 : 0;
-				}
-				else
-				{
-					if (isset($item['VARS'][$_REQUEST[$code]]))
-						$item['VALUE'] = $_REQUEST[$code];
-				}
-
-				$selected[$code] = $item['VALUE'];
-			}
-			else
-			{
-				if (isset($user['DATA']['VIEW_SELECTED'][$code]))
-					$item['VALUE'] = $user['DATA']['VIEW_SELECTED'][$code];
-			}
-
-			$return[$code] = $item;
+			User::saveData(array(
+				'PAGE_SIZE' => $size,
+			));
 		}
 
-		if ($_REQUEST['mode'] == 'ajax')
-			User::saveData(array('VIEW_SELECTED' => $selected));
+		$return = array(
+			'SIZE' => $size,
+		);
+		foreach (self::$PAGE_SIZES as $k => $v)
+		{
+			$return['ITEMS'][$k] = array(
+				'NAME' => $v,
+			    'SELECTED' => $k == $size,
+			);
+		}
 
 		return $return;
 	}
@@ -228,9 +189,8 @@ class Keygroup
 	{
 		$user = User::getCurrentUser();
 
-		$selected = array();
-
-		$return = array();
+		$filtersSelected = array();
+		$filters = array();
 		foreach (self::$FILTER_SETTINGS as $code => $item)
 		{
 			if ($code == 'mark')
@@ -257,7 +217,7 @@ class Keygroup
 						$item['VALUE'] = $_REQUEST[$code];
 				}
 
-				$selected[$code] = $item['VALUE'];
+				$filtersSelected[$code] = $item['VALUE'];
 			}
 			else
 			{
@@ -266,17 +226,62 @@ class Keygroup
 			}
 
 			$item['ACTIVE'] = $user['DATA']['FILTERS_ACTIVE'][$code] || $code == 'type';
-			$return[$code] = $item;
+			$filters[$code] = $item;
+		}
+
+		$ygsnSelected = array();
+		$ygsn = array();
+		foreach (self::$YGSN as $code => $item)
+		{
+			if ($_REQUEST['mode'] == 'ajax')
+			{
+				$item['VALUE'] = $_REQUEST[$code] ? 1 : 0;
+				$ygsnSelected[$code] = $item['VALUE'];
+			}
+			else
+			{
+				if (isset($user['DATA']['YGSN'][$code]))
+					$item['VALUE'] = $user['DATA']['YGSN'][$code];
+			}
+
+			$ygsn[$code] = $item;
 		}
 
 		if ($_REQUEST['mode'] == 'ajax')
-			User::saveData(array('FILTERS_SELECTED' => $selected));
+			User::saveData(array(
+				'FILTERS_SELECTED' => $filtersSelected,
+				'YGSN' => $ygsnSelected,
+			));
 
-		return $return;
+		return array(
+			'FILTERS' => $filters,
+		    'YGSN' => $ygsn,
+		);
 	}
 
-	public static function getParamsForGetList($filters, $view)
+	public static function checkYGSNonProlog()
 	{
+		// Обработка входящих параметров
+		if (isset($_GET['ygsn']))
+		{
+			$ygsn = array(
+				'y' => $_GET['ygsn'][0] == '1' ? 1 : 0,
+				'g' => $_GET['ygsn'][1] == '1' ? 1 : 0,
+				's' => $_GET['ygsn'][2] == '1' ? 1 : 0,
+				'n' => $_GET['ygsn'][3] == '1' ? 1 : 0,
+			);
+			User::saveData(array('YGSN' => $ygsn));
+			/** global CMain $APPLICATION */
+			global $APPLICATION;
+			LocalRedirect($APPLICATION->GetCurDir());
+		}
+	}
+
+	public static function getParamsForGetList($filtersData)
+	{
+		$filters = $filtersData['FILTERS'];
+		$size = $filtersData['PAGE_SIZE'];
+
 		$filter = array();
 		$order = array();
 
@@ -343,23 +348,24 @@ class Keygroup
 			elseif ($filters['base_count']['VALUE'] == 6)
 				$filter['>=UF_BASE_COL_COUNT'] = 5;
 
-		if ($view['sort']['VALUE'] == 'ida')
+		/*if ($view['sort']['VALUE'] == 'ida')
 			$order['ID'] = 'ASC';
 		elseif ($view['sort']['VALUE'] == 'idd')
 			$order['ID'] = 'DESC';
 		elseif ($view['sort']['VALUE'] == 'wsa')
 			$order['UF_WORDSTAT'] = 'ASC';
 		elseif ($view['sort']['VALUE'] == 'wsd')
-			$order['UF_WORDSTAT'] = 'DESC';
+			$order['UF_WORDSTAT'] = 'DESC';*/
+		$order['ID'] = 'ASC';
 
 		$return = array(
 			'filter' => $filter,
 			'order' => $order,
 		);
 
-		if ($view['size']['VALUE'] != 'all')
+		if ($size != 'all')
 		{
-			$return['limit'] = $view['size']['VALUE'];
+			$return['limit'] = $size;
 			if ($_REQUEST['page'] > 1)
 			{
 				$return['page'] = $_REQUEST['page'];
@@ -635,14 +641,14 @@ class Keygroup
 
 	public static function removeMark($keygroup, $mark)
 	{
+
 		$newMarks = array();
 		$ex = false;
 		foreach ($keygroup['MARKS'] as $m)
-			if ($m != $mark)
-			{
-				$newMarks[] = $m;
+			if ($m == $mark)
 				$ex = true;
-			}
+			else
+				$newMarks[] = $m;
 
 		if (!$ex)
 			return false;

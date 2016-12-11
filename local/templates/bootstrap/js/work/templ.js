@@ -5,14 +5,16 @@ if (siteOptions.templPage) {
 		previewTimerId: 0,
 		fieldsError: false,
 		nameError: false,
+		isYandex: false,
 		init: function () {
 			this.form = $('#templ_detail');
-			this.btnSave = this.form.find('.btn-primary');
+			this.btnSave = this.form.find('.save-btn');
 			this.btnCancel = this.form.find('.cancel');
 			this.nameInput = this.form.find('#name');
 			this.nameControlGroup = this.nameInput.closest('.control-group');
 			this.nameHelp = this.nameControlGroup.find('.help-inline');
 			this.example = this.form.find('.example');
+			this.isYandex = this.form.find('input[name=yandex]').val() == 1;
 
 			this.initCheck();
 			this.setPartsInit();
@@ -20,9 +22,12 @@ if (siteOptions.templPage) {
 			this.btnSave.click(this.saveSettings);
 			this.btnCancel.click(CMN.historyBack);
 			this.form.find('input[name="title_len"]').click(this.preview);
+			this.form.find('input[name="search"]').click(this.changeType);
 			this.form.find('input[type="checkbox"]').click(this.preview);
 			this.form.on('input', 'input[type="text"]', this.preview);
 			this.form.on('change', '.part select', this.changePart);
+			this.form.on('change', 'select[name=linkset]', this.preview);
+			this.form.on('change', 'select[name=vcard]', this.preview);
 			this.form.find('.add-part').click(this.addPart);
 			this.form.on('click', '.icon-remove', this.removePart);
 			this.form.on('click', '.part-type .tgl > span', this.toggleWords);
@@ -32,10 +37,15 @@ if (siteOptions.templPage) {
 			if (!this.name)
 				Templ.nameError = true;
 			Templ.btnDisabled();
-			Templ.preview();
+			Templ.preview(true);
 		},
 		btnDisabled: function() {
 			Templ.btnSave.prop('disabled', Templ.fieldsError || Templ.nameError);
+		},
+		changeType: function () {
+			if (Templ.isYandex)
+				Pic.toggle($(this).val());
+			Templ.preview(true);
 		},
 		toggleWords: function() {
 			var div = $(this).parent().next();
@@ -102,13 +112,14 @@ if (siteOptions.templPage) {
 				Templ.example.html(data);
 			});
 		},
-		preview: function () {
+		preview: function (now) {
 			if (Templ.previewTimerId)
 				clearTimeout(Templ.previewTimerId);
 
-			Templ.previewTimerId = setTimeout(Templ.previewAjax, 1000);
-
-			return false;
+			if (now)
+				Templ.previewAjax();
+			else
+				Templ.previewTimerId = setTimeout(Templ.previewAjax, 1000);
 		},
 		selectPart: function(select) {
 			var part = select.closest('.part');

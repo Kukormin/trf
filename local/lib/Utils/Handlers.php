@@ -2,6 +2,8 @@
 
 namespace Local\Utils;
 
+use Local\Main\Keygroup;
+use Local\Main\View;
 use Local\System\UserTypeNYesNo;
 use Local\System\Utils;
 
@@ -30,6 +32,10 @@ class Handlers
 				array(__NAMESPACE__ . '\Handlers', 'afterIBlockUpdate'));
 			AddEventHandler('iblock', 'OnIBlockPropertyBuildList',
 				array(__NAMESPACE__ . '\Handlers', 'iBlockPropertyBuildList'));
+			AddEventHandler('main', 'OnProlog',
+				array(__NAMESPACE__ . '\Handlers', 'prolog'));
+			AddEventHandler('main', 'OnAfterUserAdd',
+				array(__NAMESPACE__ . '\Handlers', 'userAdd'));
 		}
 	}
 
@@ -70,6 +76,21 @@ class Handlers
 	 */
 	public static function afterIBlockUpdate() {
 		Utils::getAllIBlocks(true);
+	}
+
+	/**
+	 * Перед выводом визуальной части
+	 */
+	public static function prolog() {
+		Keygroup::checkYGSNonProlog();
+	}
+
+	/**
+	 * После добавления новго пользователя
+	 */
+	public static function userAdd(&$arFields) {
+		if ($arFields['ID'] > 0)
+			View::addDefaulViews($arFields['ID']);
 	}
 
 }

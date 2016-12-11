@@ -5,8 +5,6 @@ $data = array();
 
 if (isset($_REQUEST['filters_show']))
 	$data['FILTERS_SHOW'] = $_REQUEST['filters_show'];
-if (isset($_REQUEST['view_show']))
-	$data['VIEW_SHOW'] = $_REQUEST['view_show'];
 if (isset($_REQUEST['filters_active']))
 {
 	$tmp = explode('|', $_REQUEST['filters_active']);

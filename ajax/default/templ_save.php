@@ -66,6 +66,7 @@ if ($category)
 			'TEXT_FIRST_BIG' => $_REQUEST['text_first_big'] == 'on',
 			'LINKSET' => intval($_REQUEST['linkset']),
 			'VCARD' => intval($_REQUEST['vcard']),
+			'PICTURE' => intval($_REQUEST['picture']),
 		);
 		$newTempl = array(
 			'NAME' => $name,

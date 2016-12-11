@@ -10,7 +10,7 @@ $keygroup = $component->keygroup;
 $ad = $component->ad;
 
 ?>
-<form id="ad_detail" class="form-horizontal">
+<form id="ad_detail" class="form-horizontal" enctype="multipart/form-data">
 	<input type="hidden" name="pid" value="<?= $projectId ?>">
 	<input type="hidden" name="cid" value="<?= $category['ID'] ?>">
 	<input type="hidden" name="kgid" value="<?= $keygroup['ID'] ?>">
@@ -152,12 +152,21 @@ $ad = $component->ad;
 					?>
 				</select>
 			</div>
-		</div>
+		</div><?
+
+		if ($ad['YANDEX'])
+		{
+			$isSearch = $ad['SEARCH'];
+			$picId = $ad['PICTURE'];
+			include('pic.php');
+		}
+
+		?>
 	</fieldset><?
 
 	?>
 	<p>
-		<button class="btn btn-primary" type="button">Сохранить</button>
+		<button class="btn btn-primary save-btn" type="button">Сохранить</button>
 		<button class="btn cancel" type="button">Отменить</button>
 	</p>
 	<div class="alerts"></div>

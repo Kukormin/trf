@@ -48,8 +48,8 @@ if ($category)
 		'TEXT_FIRST_BIG' => $_REQUEST['text_first_big'] == 'on',
 		'LINKSET' => intval($_REQUEST['linkset']),
 		'VCARD' => intval($_REQUEST['vcard']),
+		'PICTURE' => intval($_REQUEST['picture']),
 	);
-
 	$templ = array(
 		'CATEGORY' => $category['ID'],
 		'YANDEX' => intval($_REQUEST['yandex']),
@@ -64,7 +64,10 @@ if ($category)
 	$i = 0;
 	foreach ($items as $keygroup)
 	{
-		$ad = \Local\Main\Ad::generateByTemplate($keygroup, $templ, $category, $project['URL']);
+		$ad = \Local\Main\Ad::generateByTemplate($keygroup, $templ, $category);
+		$ad['HOST'] = $project['URL'];
+		$ad['SCHEME'] = $category['DATA']['SCHEME'];
+		$ad['PROJECT'] = $projectId;
 		\Local\Main\Ad::printExample($ad);
 
 		$i++;

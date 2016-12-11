@@ -128,7 +128,8 @@ var CMN = {
 			overlay: false,
 			endless: false,
 			quick: false,
-			hideloader: false
+			hideloader: false,
+			file: false
 		};
 		if (userOptions) {
 			if (userOptions.form)
@@ -147,6 +148,8 @@ var CMN = {
 				options.quick = userOptions.quick;
 			if (userOptions.hideloader)
 				options.hideloader = userOptions.hideloader;
+			if (userOptions.file)
+				options.file = userOptions.file;
 		}
 
 		if (CMN.request[action]) {
@@ -184,10 +187,23 @@ var CMN = {
 		if (options.overlay)
 			CMN.showOverlay();
 
+		var contentType = 'application/x-www-form-urlencoded; charset=UTF-8';
+		var processData = true;
+		var formData = post;
+		if (options.file && options.form) {
+			formData = new FormData(userOptions.form.get(0));
+			if (!options.custom)
+				formData.append('action', action);
+			contentType = false;
+			processData = false;
+
+		}
 		CMN.request[action] = $.ajax({
 			type: 'POST',
 			url: '/ajax/' + url + '.php',
-			data: post,
+			data: formData,
+			contentType: contentType,
+			processData: processData,
 			error: function () {
 				if (alerts)
 					BS.showAlert(alerts, 'Неизвестная ошибка. Обратитесь в службу поддержки', 'error');

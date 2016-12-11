@@ -13,22 +13,25 @@
 	}
 
 	// TODO: WORK
+			$v = '?v=2';
 	?>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/jquery.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/bootstrap.min.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/common.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/category.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/index.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/keygroup.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/keygrouplist.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/linkset.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/map.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/project.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/regime.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/templ.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/ad.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/vcard.js"></script>
-	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/ready.js"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/jquery.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/bootstrap.min.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/common.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/category.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/index.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/keygroup.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/keygrouplist.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/linkset.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/map.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/project.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/regime.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/templ.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/ad.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/pic.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/vcard.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/view.js<?= $v ?>"></script>
+	<script src="<?= SITE_TEMPLATE_PATH ?>/js/work/ready.js<?= $v ?>"></script>
 
 </body>
 </html>

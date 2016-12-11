@@ -8,6 +8,7 @@ use Local\Main\Linkset;
 use Local\Main\Project;
 use Local\Main\Templ;
 use Local\Main\Vcard;
+use Local\Main\View;
 
 if (!defined('B_PROLOG_INCLUDED') || B_PROLOG_INCLUDED !== true)
 	die();
@@ -29,6 +30,7 @@ class Navigaton extends \CBitrixComponent
 	public $templ = array();
 	public $keygroup = array();
 	public $ad = array();
+	public $view = array();
 
 	public function addNav($href, $title, $bc = false, $tab = false)
 	{
@@ -169,7 +171,7 @@ class Navigaton extends \CBitrixComponent
 									}
 
 									$this->ad = Ad::generateByTemplate($this->keygroup, $this->templ,
-										$this->category, $this->project['URL']);
+										$this->category);
 									$this->addNav('', 'Добавление объявления по шаблону "' . $this->templ['NAME'] . '"');
 								}
 								else
@@ -268,6 +270,29 @@ class Navigaton extends \CBitrixComponent
 						$this->addNav('', $this->card['NAME']);
 					}
 				}
+			}
+		}
+		// Виды
+		elseif ($parts[1] == View::URL && $parts[2])
+		{
+			$template = 'view';
+
+			$this->addNav(View::getViewsHref(), 'Виды');
+
+			if ($parts[2] == 'new')
+			{
+				$this->addNav('', 'Добавление вида');
+			}
+			else
+			{
+				$this->view = View::getById($parts[2]);
+				if (!$this->view)
+				{
+					$APPLICATION->IncludeFile('/inc/404.php');
+					return;
+				}
+
+				$this->addNav('', $this->view['NAME']);
 			}
 		}
 

@@ -2,9 +2,10 @@ if (siteOptions.adPage) {
 	var Ad = {
 		previewTimerId: 0,
 		urlTimerId: 0,
+		isYandex: false,
 		init: function () {
 			this.form = $('#ad_detail');
-			this.btnSave = this.form.find('.btn-primary');
+			this.btnSave = this.form.find('.save-btn');
 			this.btnCancel = this.form.find('.cancel');
 			this.example = this.form.find('.example');
 			this.urlInput = this.form.find('#url');
@@ -12,6 +13,7 @@ if (siteOptions.adPage) {
 			this.urlControlGroup = this.urlInput.closest('.control-group');
 			this.urlHelp = this.urlInput.siblings('.help-inline');
 			this.host = this.form.find('#host').val();
+			this.isYandex = this.form.find('input[name=yandex]').val() == 1;
 
 			this.names = ['title', 'title_2', 'text', 'url', 'link', 'link_2'];
 			this.inputs = [];
@@ -36,9 +38,14 @@ if (siteOptions.adPage) {
 			this.checkFields();
 			this.btnSave.click(this.saveSettings);
 			this.btnCancel.click(CMN.historyBack);
-			this.form.find('input[type="radio"]').click(this.preview);
+			this.form.find('input[name="search"]').click(this.changeType);
 			this.form.on('change', 'select', this.preview);
-			this.urlInput.on('input', Ad.checkHref);
+			this.urlInput.on('input', this.checkHref);
+		},
+		changeType: function () {
+			if (Ad.isYandex)
+				Pic.toggle($(this).val());
+			Ad.preview();
 		},
 		checkFields: function () {
 			var fieldsError = false;

@@ -9,7 +9,8 @@ var siteOptions = {
 	vcardPage: false,
 	templPage: false,
 	keygroupPage: false,
-	adPage: false
+	adPage: false,
+	viewPage: false
 };
 siteOptions.prototype = {
 	endless: false,

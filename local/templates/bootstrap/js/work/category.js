@@ -818,7 +818,10 @@ if (siteOptions.categoryPage) {
 			CMN.ajax('category_generate', {
 				form: Words.baseForm,
 				strategy: 1
-			}, false);
+			}, function () {
+				if (siteOptions.keygroupFilters)
+					KeyGroupList.getKeyGroups();
+			});
 			return false;
 		},
 		saveAdd: function() {

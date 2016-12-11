@@ -49,7 +49,7 @@ else
 		if ($code != 'main' && $categoryId)
 			$href .= $code . '/';
 		?>
-		<li<?= $class?>><a data-id="#<?= $code ?>" href="<?= $href ?>"><?= $name ?></a></li><?
+		<li<?= $class?>><a id="tab-<?= $code ?>" data-id="#<?= $code ?>" href="<?= $href ?>"><?= $name ?></a></li><?
 	}
 	?>
 </ul>
@@ -73,7 +73,28 @@ foreach ($tabs as $code => $name)
 		?>
 		<div class="navbar">
 			<div class="navbar-inner">
-				<ul class="nav" id="multi-nav">
+				<ul class="nav" id="multi-nav" style="display:none;">
+					<li class="dropdown">
+						<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+							<i class="icon-plus"></i> Добавить <b class="caret"></b>
+						</a>
+						<ul class="dropdown-menu">
+							<li class="dropdown-submenu">
+								<a href="javascript:void(0)">Ключевые фразы</a>
+								<ul class="dropdown-menu">
+									<li>
+										<a id="to-add-tab" href="javascript:void(0)">Списком</a>
+									</li>
+									<li>
+										<a id="to-base-tab" href="javascript:void(0)">Из базовых слов</a>
+									</li>
+								</ul>
+							</li>
+							<li class="disabled">
+								<a id="add_ad" href="javascript:void(0)">Объявления</a>
+							</li>
+						</ul>
+					</li>
 					<li>
 						<i class="help" data-placement="bottom" data-original-title="Массовые операции"
 						   data-content="Подсказа по массовым оперциям и инверсии напр."></i>
@@ -91,7 +112,10 @@ foreach ($tabs as $code => $name)
 								<a id="all_page" href="javascript:void(0)">Выбрать все на ВСЕХ страницах</a>
 							</li>
 							<li>
-								<a id="toggle_page" href="javascript:void(0)">Инвертировать</a>
+								<a id="toggle_select" href="javascript:void(0)">Инвертировать</a>
+							</li>
+							<li class="disabled">
+								<a id="cancel_select" href="javascript:void(0)">Отменить выбор</a>
 							</li>
 						</ul>
 					</li>
@@ -121,26 +145,97 @@ foreach ($tabs as $code => $name)
 									<a href="javascript:void(0)">Удалить все метки</a>
 								</li><?
 							}
+
 							?>
-							<li class="divider"></li>
-							<li class="dropdown-submenu add_templ">
-								<a href="javascript:void(0)">Создать объявление по шаблону</a>
-								<? \Local\Main\Templ::printDropdown($project['ID']) ?>
-							</li>
+							<li class="divider"></li><?
+
+							$templ = \Local\Main\Templ::getByCategory($category['ID']);
+							if ($templ)
+							{
+								?>
+								<li class="dropdown-submenu add_templ">
+									<a href="javascript:void(0)">Создать объявление по шаблону</a>
+									<? \Local\Main\Templ::printDropdown($category['ID']) ?>
+								</li><?
+							}
+							else
+							{
+								?>
+								<li class="disabled">
+									<a href="javascript:void(0)">(Нет шаблонов)</a>
+								</li><?
+							}
+							?>
 						</ul>
 					</li>
 				</ul><?
 
 				$user = \Local\Main\User::getCurrentUser();
+				$filters = \Local\Main\Keygroup::getFilters();
+
 				$filtersActive = $user['DATA']['FILTERS_SHOW'] ? ' class="active"' : '';
-				$viewActive = $user['DATA']['VIEW_SHOW'] ? ' class="active"' : '';
 				?>
 				<ul class="nav pull-right">
+					<li id="filter_ygsn" class="btns ygsn"><?
+
+						foreach ($filters['YGSN'] as $k => $item)
+						{
+							$active = $item['VALUE'] ? ' active' : '';
+							?><div class="<?= $k ?><?= $active ?>" data-id="<?= $k ?>"
+							       title="<?= $item['NAME'] ?>"><i></i></div><?
+						}
+
+						?>
+					</li>
 					<li<?= $filtersActive ?>>
 						<a id="filters_toogle" href="javascript:void(0)">Фильтр</a>
 					</li>
-					<li<?= $viewActive ?>>
-						<a id="view_toogle" href="javascript:void(0)">Вид</a>
+					<li class="btn-group views"><?
+
+						$views = \Local\Main\View::getByCurrentUser();
+						foreach ($views as $view)
+						{
+							if ($view['CODE'])
+							{
+								$active = $view['ID'] == $user['DATA']['VIEW'] ? ' active' : '';
+								?>
+								<button class="btn view_change<?= $active ?>" title="<?= $view['NAME'] ?>"
+								        data-id="<?= $view['ID'] ?>"><?= $view['CODE'] ?></button><?
+							}
+						}
+
+						?>
+						<button class="btn dropdown-toggle" data-toggle="dropdown">
+							<span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu pull-right"><?
+
+							$showDivider = false;
+							foreach ($views as $view)
+							{
+								if (!$view['CODE'])
+								{
+									$active = $view['ID'] == $user['DATA']['VIEW'] ? ' active' : '';
+									?>
+									<li>
+										<a class="view_change<?= $active ?>" href="javascript:void(0)"
+										   data-id="<?= $view['ID'] ?>"><?= $view['NAME'] ?></a>
+									</li><?
+									$showDivider = true;
+								}
+							}
+
+							if ($showDivider)
+							{
+								?>
+								<li class="divider"></li><?
+							}
+
+							?>
+							<li>
+								<a id="view_setings" href="<?= \Local\Main\View::getViewsHref() ?>">Настройки</a>
+							</li>
+						</ul>
 					</li>
 				</ul>
 			</div>
@@ -396,113 +491,6 @@ foreach ($tabs as $code => $name)
 		</p>
 	<?
 	}
-	/*
-	//
-	// --------------------------------------
-	//
-	elseif ($code == 'replace')
-	{
-		$replace = $category['DATA']['REPLACE'];
-		?>
-		<form id="replace-form">
-			<fieldset>
-				<legend>Словарь автозамен</legend>
-				<input type="hidden" name="cid" value="<?= $category['ID'] ?>" />
-				<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
-				<div class="rows"><?
-
-					foreach ($replace as $from => $to)
-					{
-						?>
-						<div class="control-group">
-							<input type="text" name="from[]" value="<?= $from ?>"/>
-							<input type="text" name="to[]" value="<?= $to ?>"/>
-						</div><?
-					}
-
-					?>
-					<div class="control-group">
-						<input type="text" name="from[]" value=""/>
-						<input type="text" name="to[]" value=""/>
-					</div>
-				</div>
-				<p>
-					<button class="btn add-row" type="button">Добавить строку</button>
-				</p>
-			</fieldset>
-			<p>
-				<button class="btn btn-primary" type="button">Сохранить</button>
-			</p>
-			<div class="alerts"></div>
-		</form><?
-	}
-	//
-	// --------------------------------------
-	//
-	elseif ($code == 'weight')
-	{
-		$titlePlus = $category['DATA']['TITLE_PLUS'];
-		$textPlus = $category['DATA']['TEXT_PLUS'];
-		?>
-		<form id="plus-form">
-			<div class="row-fluid">
-				<div class="span6 title-plus">
-					<fieldset>
-						<legend>Дополнения к заголовкам объявлений</legend>
-						<input type="hidden" name="cid" value="<?= $category['ID'] ?>" />
-						<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
-						<div class="rows"><?
-
-							foreach ($titlePlus as $item)
-							{
-								?>
-								<div class="control-group">
-									<input type="text" name="w1[]" value="<?= $item ?>"/>
-								</div><?
-							}
-
-							?>
-							<div class="control-group">
-								<input type="text" name="w1[]" value=""/>
-							</div>
-						</div>
-						<p>
-							<button class="btn add-row" type="button">Добавить строку</button>
-						</p>
-					</fieldset>
-				</div>
-				<div class="span6 text-plus">
-					<fieldset>
-						<legend>Дополнения к текстам объявлений</legend>
-						<input type="hidden" name="cid" value="<?= $category['ID'] ?>" />
-						<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
-						<div class="rows"><?
-
-							foreach ($textPlus as $item)
-							{
-								?>
-								<div class="control-group">
-								<input type="text" name="w2[]" value="<?= $item ?>"/>
-								</div><?
-							}
-
-							?>
-							<div class="control-group">
-								<input type="text" name="w2[]" value=""/>
-							</div>
-						</div>
-						<p>
-							<button class="btn add-row" type="button">Добавить строку</button>
-						</p>
-					</fieldset>
-				</div>
-			</div>
-			<p>
-				<button class="btn btn-primary" type="button">Сохранить</button>
-			</p>
-			<div class="alerts"></div>
-		</form><?
-	}*/
 
 	?>
 	</div><?

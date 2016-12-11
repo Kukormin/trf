@@ -8,6 +8,7 @@ $tabCode = $component->tabCode;
 $tabs = array(
 	'projects' => 'Проекты',
 	'mark' => 'Метки',
+	'view' => 'Виды',
 );
 if (!$tabs[$tabCode])
 	$tabCode = 'projects';
@@ -129,6 +130,49 @@ foreach ($tabs as $code => $name)
 			</p>
 			<div class="alerts"></div>
 		</form><?
+	}
+	//
+	// ---------------------------------------------------
+	//
+	if ($code == 'view')
+	{
+		$views = \Local\Main\View::getByCurrentUser();
+
+		?>
+		<table class="table table-striped table-hover">
+			<thead>
+				<tr>
+					<th>Название</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody><?
+
+				foreach ($views as $item)
+				{
+					$href = \Local\Main\View::getHref($item['ID']);
+					?>
+					<tr>
+						<td><a href="<?= $href ?>"><?= $item['NAME'] ?></a></td>
+						<td><?
+							if (!$item['CODE'])
+							{
+								?><a data-id="<?= $item['ID'] ?>" class="view_delete"
+								     href="javascript:void(0);">Удалить</a><?
+							}
+							?>
+						</td>
+					</tr><?
+				}
+
+				?>
+			</tbody>
+		</table><?
+
+		?>
+		<p>
+			<a class="btn btn-primary" href="<?= \Local\Main\View::getNewHref() ?>">Новый вид</a>
+		</p><?
 	}
 
 	?>

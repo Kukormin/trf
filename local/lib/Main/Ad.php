@@ -65,6 +65,7 @@ class Ad
 					'LINK_2' => $item['UF_LINK_2'],
 					'LINKSET' => $item['UF_LINKSET'],
 					'VCARD' => $item['UF_VCARD'],
+					'PICTURE' => intval($item['UF_PICTURE']),
 					'GROUP' => intval($item['UF_GROUP']),
 					'CATEGORY' => intval($item['UF_CATEGORY']),
 					'PROJECT' => intval($item['UF_PROJECT']),
@@ -142,331 +143,14 @@ class Ad
 		return $ad;
 	}
 
-	/*public static function createByTempl($keygroup, $templ, $category, $project)
+	public static function addByTemplate($keygroup, $templ, $category)
 	{
-		debugmessage($category['DATA']['TITLE_PLUS']);
-		$options = $templ['DATA'];
-		debugmessage($options);
-
-		$text = '';
-
-		// Заголовок задан вручную
-		if ($options['TITLE_TYPE'] == 2)
-		{
-			$title = $options['TITLE_MANUAL'];
-		}
-		// Формируем из ключевой фразы
-		else
-		{
-			//$parts = array('расширим', 'еще тест');
-			$parts = array('еще тест');
-			//$parts = array();
-			if ($keygroup['BASE'] > 0)
-			{
-				$baseParts = explode(',', $keygroup['BASE']);
-				foreach ($baseParts as $i => $part)
-				{
-					if ($part)
-					{
-						$word = $category['DATA']['BASE'][$i]['WORDS'][$part - 1];
-						if ($word)
-							$parts[] =  $word;
-					}
-				}
-				if ($options['REPLACE'] && $category['DATA']['REPLACE'])
-				{
-					foreach ($parts as $i => $part)
-						foreach ($category['DATA']['REPLACE'] as $from => $to)
-						{
-							$part = str_replace($from, $to, $part);
-							$parts[$i] = $part;
-						}
-				}
-				$keyword = implode(' ', $parts);
-			}
-			else
-			{
-				$keyword = $keygroup['NAME'];
-				if ($options['REPLACE'] && $category['DATA']['REPLACE'])
-				{
-					foreach ($category['DATA']['REPLACE'] as $from => $to)
-						$keyword = str_replace($from, $to, $keyword);
-				}
-				$parts = explode(' ', $keyword);
-			}
-
-			$l = strlen($keyword);
-			if ($l > 33)
-			{
-				$i = count($parts);
-				$sum = 0;
-				foreach ($parts as $i => $s)
-				{
-					$cur = strlen($s) + ($i ? 1 : 0);
-					if ($sum + $cur > 33)
-						break;
-					else
-						$sum += $cur;
-				}
-				$title = implode(' ', array_slice($parts, 0, $i));
-				$l = strlen($title);
-
-				// Если можно расширить заголовок до 56 символов
-				if ($options['TITLE_56'])
-				{
-					$parts = array_slice($parts, $i);
-					$keyword = implode(' ', $parts);
-					$x = 52 - $l;
-					if (strlen($keyword) > $x)
-					{
-						$i = count($parts);
-						$sum = 0;
-						foreach ($parts as $i => $s)
-						{
-							$cur = strlen($s) + ($i ? 1 : 0);
-							if ($sum + $cur > $x)
-								break;
-							else
-								$sum += $cur;
-						}
-						$text = implode(' ', array_slice($parts, 0, $i)) . '!';
-					}
-					else
-					{
-						$text = $keyword . '!';
-
-						// Добавки
-						if ($options['TITLE_TYPE'] == 1 && $category['DATA']['TITLE_PLUS'])
-						{
-							$x -= strlen($text) + 1;
-							foreach ($category['DATA']['TITLE_PLUS'] as $plus)
-							{
-								if (strlen($plus) <= $x)
-								{
-									$text .= ' ' . $plus;
-									break;
-								}
-							}
-						}
-					}
-				}
-				else
-					if ($l < 33)
-						$title .= '!';
-			}
-			else
-			{
-				$title = $keyword;
-				if ($l < 33)
-					$title .= '!';
-
-				// Добавки
-				if ($options['TITLE_TYPE'] == 1 && $category['DATA']['TITLE_PLUS'])
-				{
-					$x = 32 - strlen($title);
-					$y = $x + 20;
-					foreach ($category['DATA']['TITLE_PLUS'] as $plus)
-					{
-						$l = strlen($plus);
-						if ($l <= $x)
-						{
-							$title .= ' ' . $plus;
-							break;
-						}
-						elseif ($options['TITLE_56'] && $l <= $y)
-						{
-							$text = $plus;
-							break;
-						}
-					}
-				}
-			}
-
-		}
-
-		debugmessage($title);
-		debugmessage(strlen($title));
-		debugmessage($text);
-		debugmessage(strlen($text));
-		debugmessage(strlen($text) + strlen($title));
-
-
+		$ad = self::generateByTemplate($keygroup, $templ, $category);
+		$ad['GROUP'] = $keygroup['ID'];
+		$ad['CATEGORY'] = $category['ID'];
+		$ad['PROJECT'] = $category['PROJECT'];
+		self::add($ad);
 	}
-
-	public static function getFields($keyword, $options)
-	{
-		// Заголовок и текст - вручную
-		if ($options['TYPE'] == 'manual')
-		{
-			$title = $options['TITLE_MANUAL'];
-			$text = $options['TEXT_MANUAL'];
-		}
-		// Формируем из ключевой фразы
-		else
-		{
-			$text = '';
-			$parts = explode(' ', $keyword);
-
-			$titlePlus = explode("\n", $options['TITLE_PLUS']);
-			$textPlus = explode("\n", $options['TEXT_PLUS']);
-
-			$l = strlen($keyword);
-			if ($l > 33)
-			{
-				$i = count($parts);
-				$sum = 0;
-				foreach ($parts as $i => $s)
-				{
-					$cur = strlen($s) + ($i ? 1 : 0);
-					if ($sum + $cur > 33)
-						break;
-					else
-						$sum += $cur;
-				}
-				$title = implode(' ', array_slice($parts, 0, $i));
-				$l = strlen($title);
-
-				// Если можно расширить заголовок до 56 символов
-				if ($options['TITLE_LEN'] = 56)
-				{
-					$parts = array_slice($parts, $i);
-					$keyword = implode(' ', $parts);
-					$x = 53 - $l;
-					if (strlen($keyword) > $x)
-					{
-						$i = count($parts);
-						$sum = 0;
-						foreach ($parts as $i => $s)
-						{
-							$cur = strlen($s) + ($i ? 1 : 0);
-							if ($sum + $cur > $x)
-								break;
-							else
-								$sum += $cur;
-						}
-						$text = implode(' ', array_slice($parts, 0, $i));
-						$total = $l + strlen($text) + 3;
-						if ($total < 56)
-							$text .= '!';
-						else
-							$text .= '.';
-					}
-					else
-					{
-						$text = $keyword . '!';
-
-						// Добавки
-						if ($titlePlus)
-						{
-							$x -= strlen($text) + 1;
-							foreach ($titlePlus as $plus)
-							{
-								if (strlen($plus) <= $x)
-								{
-									$text .= ' ' . $plus;
-									break;
-								}
-							}
-						}
-					}
-				}
-				else
-					if ($l < 33)
-						$title .= '!';
-			}
-			else
-			{
-				$title = $keyword;
-				if ($l < 33)
-					$title .= '!';
-
-				// Добавки
-				if ($titlePlus)
-				{
-					$x = 32 - strlen($title);
-					$y = $x + 20;
-					foreach ($titlePlus as $plus)
-					{
-						$l = strlen($plus);
-						if ($l <= $x)
-						{
-							$title .= ' ' . $plus;
-							break;
-						}
-						elseif ($options['TITLE_LEN'] == 56 && $l <= $y)
-						{
-							$text = $plus;
-							break;
-						}
-					}
-				}
-			}
-
-			// Текст
-			if ($textPlus)
-			{
-				$x = 74 - strlen($text);
-				foreach ($textPlus as $plus)
-				{
-					if ($l <= $x)
-					{
-						$text .= ' ' . $plus;
-						break;
-					}
-				}
-			}
-
-		}
-
-		return array(
-			'TITLE' => $title,
-		    'TEXT' => $text,
-		);
-	}
-
-	private static function addPart($s, $part, $max)
-	{
-		$f = $part[0];
-		$punct = $f == '!' || $f == '.' || $f == '?' || $f == ',' || $f == ':' || $f == ';';
-		$add = '';
-		if ($s && !$punct)
-			$add = ' ';
-		$add .= $part;
-		$new = $s . $add;
-		if (strlen($new) > $max)
-			return false;
-
-		return $new;
-	}
-
-	public static function getTitle($keygroup, $templ)
-	{
-		$title = '';
-		if ($keygroup['BASE'] < 0)
-			return $title;
-
-		$max = $templ['DATA']['TITLE_56'] ? 56 : 33;
-
-		$base = explode(',', $keygroup['BASE']);
-		foreach ($templ['DATA']['TITLE'] as $part)
-		{
-			if ($part['KEY'] == 'text')
-			{
-				$title = self::addPart($title, $part['D'], $max);
-			}
-			else
-			{
-				$col = substr($part['KEY'], 3);
-				$i = $base[$col];
-				$word = $part['D'][$i];
-				if ($word)
-				{
-					$title = self::addPart($title, $word, $max);
-				}
-			}
-		}
-		return $title;
-	}*/
 
 	public static function generateByTemplate($keygroup, $templ, $category)
 	{
@@ -474,8 +158,9 @@ class Ad
 			'YANDEX' => $templ['YANDEX'],
 			'SEARCH' => $templ['SEARCH'],
 			'URL' => $category['DATA']['PATH'],
-			'LINKSET' => $templ['LINKSET'],
-			'VCARD' => $templ['VCARD'],
+			'LINKSET' => $templ['DATA']['LINKSET'],
+			'VCARD' => $templ['DATA']['VCARD'],
+		    'PICTURE' => $templ['DATA']['PICTURE'],
 		);
 		if ($ad['YANDEX'])
 		{
@@ -630,12 +315,19 @@ class Ad
 	{
 		$scheme = $ad['SCHEME'] == 'https' ? 'https' : 'http';
 		$url = $scheme . '://' . $ad['HOST'] . $ad['URL'];
+		$src = '';
+		if ($ad['PICTURE'])
+		{
+			$picture = Picture::getPreview($ad['PICTURE']);
+			if ($picture['src'])
+				$src = $picture['src'];
+		}
 		?>
 		<div class="ad-preview yandex-net">
 			<div class="picture">
 				<div class="picture-block">
 					<a>
-						<img src="" />
+						<img src="<?= $src ?>" />
 					</a>
 				</div>
 			</div>

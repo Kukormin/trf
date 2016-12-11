@@ -19,6 +19,7 @@ $(document).ready(function() {
 	// Главная страница
 	if (siteOptions.indexPage) {
 		Marks.init();
+		ViewList.init();
 	}
 
 	// Страница проекта
@@ -52,6 +53,7 @@ $(document).ready(function() {
 	// Страница шаблонов объявлений
 	if (siteOptions.templPage) {
 		Templ.init();
+		Pic.init();
 	}
 
 	// Страница ключевых фраз
@@ -62,6 +64,12 @@ $(document).ready(function() {
 	// Страница объявлений
 	if (siteOptions.adPage) {
 		Ad.init();
+		Pic.init();
+	}
+
+	// Страница видов
+	if (siteOptions.viewPage) {
+		View.init();
 	}
 
 });

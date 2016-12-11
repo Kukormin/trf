@@ -32,7 +32,24 @@ if (siteOptions.indexPage) {
 				form: Marks.form,
 				strategy: 2,
 				overlay: true
-			});
+			}, false);
+			return false;
+		}
+	};
+
+	var ViewList = {
+		init: function () {
+			$('.view_delete').click(this.viewDelete);
+		},
+		viewDelete: function() {
+			var a = $(this);
+			var id = a.data('id');
+			var row = a.closest('tr');
+			row.remove();
+			CMN.ajax('view_delete', {
+				strategy: 1,
+				post: 'id=' + id
+			}, false);
 			return false;
 		}
 	};
