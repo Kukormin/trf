@@ -13,7 +13,7 @@ if ($category)
 	$res = \Local\Main\Picture::check($file);
 	if ($res)
 	{
-		$return['alerts'] = array(
+		$return['messages'] = array(
 			array('<p>' . $res . '</p>', 'error'),
 		);
 		return;
@@ -22,7 +22,7 @@ if ($category)
 	$fileId = \Local\Main\Picture::upload($file, $projectId);
 	if (!$fileId)
 	{
-		$return['alerts'] = array(
+		$return['messages'] = array(
 			array('<p>Ошибка сохранения файла</p>', 'error'),
 		);
 		return;

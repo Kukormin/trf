@@ -24,21 +24,28 @@ foreach ($views as $view)
 if (!$ex && !$onlyCheck)
 {
 	$columns = $_REQUEST['columns'];
-	if (in_array('cb', $columns))
+	if (!in_array('cb', $columns))
 		$columns[] = 'cb';
-	if (in_array('name', $columns))
+	if (!in_array('name', $columns))
 		$columns[] = 'name';
-	if (in_array('action', $columns))
+	if (!in_array('action', $columns))
 		$columns[] = 'action';
+
+	$adc = $_REQUEST['adc'];
+	if (!in_array('cb', $adc))
+		$adc[] = 'cb';
 
 	$data = array(
 		'AD_COUNT' => intval($_REQUEST['ad_count']),
-		'COLUMNS' => $_REQUEST['columns'],
+		'COLUMNS' => $columns,
+		'AD_COLUMNS' => $adc,
 	);
 	$newView = array(
 		'NAME' => $name,
 		'DATA' => $data,
 	);
+
+	$editMode = $_REQUEST['em'] == 1;
 
 	if ($viewId)
 	{
@@ -46,7 +53,7 @@ if (!$ex && !$onlyCheck)
 		$view = \Local\Main\View::update($view, $newView);
 	}
 	else
-		$view = \Local\Main\View::add($newView);
+		$view = \Local\Main\View::add($newView, $editMode);
 
 	$return['redirect'] = \Local\Main\View::getViewsHref();
 }

@@ -26,11 +26,11 @@ if (siteOptions.adPage || siteOptions.templPage) {
 			if (siteOptions.templPage)
 				Templ.preview(true);
 		},
-		toggle: function(search) {
-			if (search == 1)
-				Pic.imageGroup.slideUp();
-			else
+		toggle: function(show) {
+			if (show)
 				Pic.imageGroup.slideDown();
+			else
+				Pic.imageGroup.slideUp();
 		},
 		newPicture: function() {
 			var val = Pic.tmp.val();

@@ -1,6 +1,6 @@
 {
     "require": {
-        "guzzlehttp/guzzle": "~6.0",
+		"guzzle/guzzle": "~3.9",
 		"googleads/googleads-php-lib": "dev-master"
     },
 	"repositories": [

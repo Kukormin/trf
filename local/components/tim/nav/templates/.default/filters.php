@@ -22,6 +22,12 @@ foreach ($filters['YGSN'] as $k => $item)
 	<input type="hidden" name="<?= $k ?>" value="<?= $item['VALUE'] ?>" /><?
 }
 
+foreach ($filters['PLATFORM'] as $k => $item)
+{
+	?>
+	<input type="hidden" name="<?= $k ?>" value="<?= $item['VALUE'] ?>" /><?
+}
+
 // Панель фильтров
 $style = ' style="display:none;"';
 if ($user['DATA']['FILTERS_SHOW'])

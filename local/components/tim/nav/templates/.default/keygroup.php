@@ -85,10 +85,8 @@ $ws = $keygroup['WORDSTAT'] == -1 ? 'не проверена' : $keygroup['WORDS
 			Создать объявление вручную:
 		</h4>
 		<p>
-			<a href="<?= \Local\Main\Ad::getAddYandexHref($category, $keygroup) ?>"
-			   class="btn add-ad" type="button">Для <?= DIRECT_NAME ?></a>
-			<a href="<?= \Local\Main\Ad::getAddGoogleHref($category, $keygroup) ?>"
-			   class="btn add-ad" type="button">Для <?= ADWORDS_NAME ?></a>
+			<a href="<?= \Local\Main\Ad::getAddHref($category, $keygroup) ?>"
+			   class="btn add-ad" type="button">Создать вручную</a>
 		</p><?
 
 		$ads = \Local\Main\Ad::getByKeygroup($keygroup['ID']);

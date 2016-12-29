@@ -42,6 +42,6 @@ foreach ($newItems as $new)
 if ($cache)
 	\Local\Main\Mark::getByCurrentUser(true);
 
-$return['alerts'] = array(
+$return['messages'] = array(
 	array('<p>Успешно сохранено</p>', 'success'),
 );

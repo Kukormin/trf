@@ -16,6 +16,9 @@ $(document).ready(function() {
 	// Общее
 	CMN.init();
 
+	// Уведомления
+	Alerts.init();
+
 	// Главная страница
 	if (siteOptions.indexPage) {
 		Marks.init();
@@ -30,7 +33,8 @@ $(document).ready(function() {
 	// Страница категории
 	if (siteOptions.categoryPage) {
 		CategoryPage.init();
-		Words.init();
+		Combo.init();
+		AddWords.init();
 	}
 
 	// Список ключевых групп с фильтрами

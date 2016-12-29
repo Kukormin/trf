@@ -33,13 +33,13 @@ if ($category)
 
 	if ($category['UPDATED'])
 	{
-		$return['alerts'] = array(
+		$return['messages'] = array(
 			array('<p>Успешно сохранено</p>', 'success'),
 		);
 	}
 	else
 	{
-		$return['alerts'] = array(
+		$return['messages'] = array(
 			array('<p>Нет изменений</p>', 'block'),
 		);
 	}

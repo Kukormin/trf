@@ -2,7 +2,7 @@ if (siteOptions.viewPage) {
 	var View = {
 		name: '',
 		nameTimerId: 0,
-		dragRegime: false,
+		dragRegime: 0,
 		draggedDiv: false,
 		draggedCont: false,
 		draggedIndex: 0,
@@ -20,17 +20,23 @@ if (siteOptions.viewPage) {
 			this.nameInput = this.form.find('#name');
 			this.nameControlGroup = this.nameInput.closest('.control-group');
 			this.nameHelp = this.nameControlGroup.find('.help-inline');
-			this.constructor = this.form.find('.view_constuctor');
-			this.left = this.form.find('.view_columns.left');
-			this.right = this.form.find('.view_columns.right');
+			this.constructor = this.form.find('#constructor');
+			this.left = this.constructor.find('.view_columns.left');
+			this.right = this.constructor.find('.view_columns.right');
+			this.adConstructor = this.form.find('#ad_constructor');
+			this.adLeft = this.adConstructor.find('.view_columns.left');
+			this.adRight = this.adConstructor.find('.view_columns.right');
+			this.adSet = this.form.find('#ad_set');
 
 			this.initCheck();
 
 			this.nameInput.on('input', this.checkName);
 			this.btnSave.click(this.saveSettings);
 			this.btnCancel.click(CMN.historyBack);
-			this.constructor.on('mousedown', '.view_column b', this.remove);
-			this.constructor.on('mousedown', '.view_column', this.mouseDown);
+			this.constructor.on('mousedown', '.view_columns .view_column b', this.remove);
+			this.constructor.on('mousedown', '.view_columns .view_column', this.mouseDown);
+			this.adConstructor.on('mousedown', '.view_columns .view_column b', this.adRemove);
+			this.adConstructor.on('mousedown', '.view_columns .view_column', this.adMouseDown);
 			CMN.body.on('mousemove', this.mouseMove);
 			CMN.body.on('mouseup', this.mouseUp);
 
@@ -65,10 +71,15 @@ if (siteOptions.viewPage) {
 			if (!save)
 				addParams = 'only_check=Y';
 			else {
-				View.left.children().each(function() {
+				View.constructor.children('div:first').find('.column_cont').each(function() {
 					if (addParams)
 						addParams += '&';
 					addParams += 'columns[]=' + $(this).data('code');
+				});
+				View.adConstructor.children('div:first').find('.column_cont').each(function() {
+					if (addParams)
+						addParams += '&';
+					addParams += 'adc[]=' + $(this).data('code');
 				});
 			}
 			CMN.ajax('view_save', {
@@ -103,10 +114,21 @@ if (siteOptions.viewPage) {
 			var cont = $(this).parent().parent();
 			View.right.append(cont);
 
+			if (cont.data('code') == 'ad')
+				View.adSet.stop().slideUp();
+
+			return false;
+		},
+		adRemove: function (e) {
+			e.stopPropagation();
+
+			var cont = $(this).parent().parent();
+			View.adRight.append(cont);
+
 			return false;
 		},
 		mouseDown: function (e) {
-			View.dragRegime = true;
+			View.dragRegime = 1;
 			View.draggedDiv = $(this);
 			View.draggedCont = View.draggedDiv.parent();
 			View.draggedReq = !View.draggedDiv.children('b').length;
@@ -120,7 +142,26 @@ if (siteOptions.viewPage) {
 			View.draggedCont.addClass('target');
 			View.draggedDiv.addClass('target');
 
-			View.setLevels();
+			View.setLevels(View.left, View.right);
+
+			return false;
+		},
+		adMouseDown: function (e) {
+			View.dragRegime = 2;
+			View.draggedDiv = $(this);
+			View.draggedCont = View.draggedDiv.parent();
+			View.draggedReq = !View.draggedDiv.children('b').length;
+			var pos = View.draggedDiv.position();
+			View.x = e.pageX - pos.left;
+			View.y = e.pageY - pos.top;
+			View.draggedDiv.css({
+				left: pos.left,
+				top: pos.top
+			});
+			View.draggedCont.addClass('target');
+			View.draggedDiv.addClass('target');
+
+			View.setLevels(View.adLeft, View.adRight);
 
 			return false;
 		},
@@ -161,12 +202,16 @@ if (siteOptions.viewPage) {
 				index = len;
 
 			if (toLeft != View.inLeft || index < View.draggedIndex || index > View.draggedIndex + 1) {
-				var targetPanel = toLeft ? View.left : View.right;
+				var targetPanel = toLeft ? (View.dragRegime == 1 ? View.left : View.adLeft) :
+					(View.dragRegime == 1 ? View.right : View.adRight);
 				if (index == len)
 					targetPanel.append(View.draggedCont);
 				else
 					targetPanel.children('div:eq(' + index + ')').before(View.draggedCont);
-				View.setLevels();
+				if (View.dragRegime == 1)
+					View.setLevels(View.left, View.right);
+				else
+					View.setLevels(View.adLeft, View.adRight);
 			}
 
 			return false;
@@ -181,22 +226,31 @@ if (siteOptions.viewPage) {
 			View.draggedCont.removeClass('target');
 			View.draggedDiv.removeClass('target');
 
-			View.dragRegime = false;
+			if (View.dragRegime == 1) {
+				if (View.draggedCont.data('code') == 'ad') {
+					if (View.inLeft)
+						View.adSet.stop().slideDown();
+					else
+						View.adSet.stop().slideUp();
+				}
+			}
+
+			View.dragRegime = 0;
 		},
-		setLevels: function() {
+		setLevels: function(left, right) {
 			View.leftLevels = [];
-			View.left.children().each(function(index) {
+			left.children().each(function(index) {
 				var pos = $(this).position();
 				var height = $(this).height() + 2;
 				View.leftLevels[index] = pos.top + height / 2;
 			});
 			View.rightLevels = [];
-			View.right.children().each(function(index) {
+			right.children().each(function(index) {
 				var pos = $(this).position();
 				var height = $(this).height() + 2;
 				View.rightLevels[index] = pos.top + height / 2;
 			});
-			var pos = View.right.offset();
+			var pos = right.offset();
 			View.rightX = pos.left;
 			View.draggedIndex = View.draggedCont.index();
 			View.inLeft = View.draggedCont.parent().is('.left');

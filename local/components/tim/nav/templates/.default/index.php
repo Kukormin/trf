@@ -139,6 +139,7 @@ foreach ($tabs as $code => $name)
 		$views = \Local\Main\View::getByCurrentUser();
 
 		?>
+		<h2>Для обычного режима</h2>
 		<table class="table table-striped table-hover">
 			<thead>
 				<tr>
@@ -150,12 +151,15 @@ foreach ($tabs as $code => $name)
 
 				foreach ($views as $item)
 				{
+					if ($item['EDIT_MODE'])
+						continue;
+
 					$href = \Local\Main\View::getHref($item['ID']);
 					?>
 					<tr>
 						<td><a href="<?= $href ?>"><?= $item['NAME'] ?></a></td>
 						<td><?
-							if (!$item['CODE'])
+							if ($item['CODE'] > 10)
 							{
 								?><a data-id="<?= $item['ID'] ?>" class="view_delete"
 								     href="javascript:void(0);">Удалить</a><?
@@ -171,7 +175,47 @@ foreach ($tabs as $code => $name)
 
 		?>
 		<p>
-			<a class="btn btn-primary" href="<?= \Local\Main\View::getNewHref() ?>">Новый вид</a>
+			<a class="btn btn-primary" href="<?= \Local\Main\View::getNewHref() ?>">Новый вид для обычного режима</a>
+		</p><?
+
+		?>
+		<h2>Для режима правки</h2>
+		<table class="table table-striped table-hover">
+			<thead>
+				<tr>
+					<th>Название</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody><?
+
+				foreach ($views as $item)
+				{
+					if (!$item['EDIT_MODE'])
+						continue;
+
+					$href = \Local\Main\View::getHref($item['ID']);
+					?>
+					<tr>
+					<td><a href="<?= $href ?>"><?= $item['NAME'] ?></a></td>
+					<td><?
+						if ($item['CODE'] > 10)
+						{
+							?><a data-id="<?= $item['ID'] ?>" class="view_delete"
+							     href="javascript:void(0);">Удалить</a><?
+						}
+						?>
+					</td>
+					</tr><?
+				}
+
+				?>
+			</tbody>
+		</table><?
+
+		?>
+		<p>
+		<a class="btn btn-primary" href="<?= \Local\Main\View::getEditNewHref() ?>">Новый вид для режима правки</a>
 		</p><?
 	}
 

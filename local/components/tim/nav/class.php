@@ -145,34 +145,29 @@ class Navigaton extends \CBitrixComponent
 							{
 								$template = 'ad';
 
-								if ($parts[8] == 'ynew')
+								if ($parts[8] == 'new')
 								{
-									$this->ad = array(
-										'YANDEX' => 1,
-										'SEARCH' => 1,
-									);
-									$this->addNav('', 'Добавление объявления для ' . DIRECT_NAME);
-								}
-								elseif ($parts[8] == 'gnew')
-								{
-									$this->ad = array(
-										'YANDEX' => 0,
-										'SEARCH' => 1,
-									);
-									$this->addNav('', 'Добавление объявления для ' . ADWORDS_NAME);
-								}
-								elseif ($parts[8] == 'new')
-								{
-									$this->templ = Templ::getById($parts[9], $categoryId);
-									if (!$this->templ)
+									if ($parts[9])
 									{
-										$APPLICATION->IncludeFile('/inc/404.php');
-										return;
-									}
+										$this->templ = Templ::getById($parts[9], $categoryId);
+										if (!$this->templ)
+										{
+											$APPLICATION->IncludeFile('/inc/404.php');
+											return;
+										}
 
-									$this->ad = Ad::generateByTemplate($this->keygroup, $this->templ,
-										$this->category);
-									$this->addNav('', 'Добавление объявления по шаблону "' . $this->templ['NAME'] . '"');
+										$this->ad = Ad::generateByTemplate($this->keygroup, $this->templ, $this->category);
+										$this->addNav('', 'Добавление объявления по шаблону "' . $this->templ['NAME'] . '"');
+									}
+									else
+									{
+										$this->ad = array(
+											'YANDEX' => 1,
+											'SEARCH' => 1,
+											'PLATFORM' => 'ys',
+										);
+										$this->addNav('', 'Добавление объявления');
+									}
 								}
 								else
 								{
@@ -281,7 +276,12 @@ class Navigaton extends \CBitrixComponent
 
 			if ($parts[2] == 'new')
 			{
-				$this->addNav('', 'Добавление вида');
+				$this->addNav('', 'Добавление вида для обычного режима');
+			}
+			elseif ($parts[2] == 'enew')
+			{
+				$this->view['EDIT_MODE'] = true;
+				$this->addNav('', 'Добавление вида для режима правки');
 			}
 			else
 			{

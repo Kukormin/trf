@@ -162,13 +162,13 @@ var CMN = {
 		}
 
 		var post = '';
-		var alerts = false;
+		var resultCont = false;
 		if (options.form) {
 			options.form.addClass('process');
 			if (!options.hideloader)
 				options.form.addClass('loaders');
 			post = options.form.serialize();
-			alerts = options.form.find('.alerts');
+			resultCont = options.form.find('.alerts');
 		}
 
 		var url = action;
@@ -205,8 +205,8 @@ var CMN = {
 			contentType: contentType,
 			processData: processData,
 			error: function () {
-				if (alerts)
-					BS.showAlert(alerts, 'Неизвестная ошибка. Обратитесь в службу поддержки', 'error');
+				if (resultCont)
+					BS.showAlert(resultCont, 'Неизвестная ошибка. Обратитесь в службу поддержки', 'error');
 			},
 			success: function (data) {
 				if (data.endless) {
@@ -227,11 +227,17 @@ var CMN = {
 						options.endless = true;
 					}
 					else {
-						if (data.alerts && alerts) {
-							var l = data.alerts.length;
+						if (data.messages && resultCont) {
+							var l = data.messages.length;
 							for (var i = 0; i < l; i++)
-								BS.showAlert(alerts, data.alerts[i][0], data.alerts[i][1]);
+								BS.showAlert(resultCont, data.messages[i][0], data.messages[i][1]);
 						}
+						if (data.alerts) {
+							for (var id in data.alerts)
+								Alerts.show(id, data.alerts[id]);
+						}
+						if (data.tasks)
+							Task.on();
 						if (successCallback)
 							successCallback(data);
 					}
@@ -315,5 +321,31 @@ var BS = {
 			html = '<div class="alert' + cl + '">' + this.closeBtn + html + '</div>';
 			cont.append(html);
 		}
+	}
+};
+
+var Alerts = {
+	init: function() {
+		this.cont = $('#alerts_cont');
+		this.cont.on('click', '.close > span', this.close);
+	},
+	show: function(id, html) {
+		var box = Alerts.cont.children('div#alert_' + id);
+		if (!box.length) {
+			box = $(html);
+			box.hide();
+			Alerts.cont.append(box);
+		}
+		if (box.length)
+			box.slideDown();
+	},
+	close: function() {
+		var box = $(this).closest('.alert-box');
+		var id = box.data('id');
+		CMN.ajax('alert_close', {
+			post: 'id=' + id,
+			strategy: 1
+		}, false);
+		box.slideUp();
 	}
 };

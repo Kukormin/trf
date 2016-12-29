@@ -16,6 +16,7 @@ siteOptions.prototype = {
 	endless: false,
 	redirect: '',
 	alerts: [],
+	tasks: [],
 	EX: false,
 	AUTO: false,
 	MANUAL: false,

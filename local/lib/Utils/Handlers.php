@@ -82,7 +82,8 @@ class Handlers
 	 * Перед выводом визуальной части
 	 */
 	public static function prolog() {
-		Keygroup::checkYGSNonProlog();
+		//Keygroup::checkYGSNonProlog();
+		Keygroup::checkPlatformOnProlog();
 	}
 
 	/**

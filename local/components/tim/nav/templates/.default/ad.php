@@ -9,22 +9,36 @@ $category = $component->category;
 $keygroup = $component->keygroup;
 $ad = $component->ad;
 
+$adYandex = $ad['YANDEX'] ? ' ad-yandex' : '';
+
 ?>
-<form id="ad_detail" class="form-horizontal" enctype="multipart/form-data">
+<form id="ad_detail" class="form-horizontal<?= $adYandex ?>" enctype="multipart/form-data">
 	<input type="hidden" name="pid" value="<?= $projectId ?>">
 	<input type="hidden" name="cid" value="<?= $category['ID'] ?>">
 	<input type="hidden" name="kgid" value="<?= $keygroup['ID'] ?>">
 	<input type="hidden" name="adid" value="<?= $ad['ID'] ?>">
-	<input type="hidden" name="yandex" value="<?= $ad['YANDEX'] ?>">
 	<div class="control-group">
-		<label class="control-label" for="name">Назначение</label>
-		<div class="controls">
-			<label class="radio">
-				<input type="radio" name="search" value="1"<?= $ad['SEARCH'] ? ' checked' : '' ?> /> поиск
-			</label>
-			<label class="radio">
-				<input type="radio" name="search" value="0"<?= $ad['SEARCH'] ? '' : ' checked' ?> /> сети
-			</label>
+		<label class="control-label" for="name">Площадка</label>
+		<div class="controls"><?
+
+			//if ($ad['ID'])
+			if (false)
+			{
+				$platform = \Local\Main\Keygroup::$PLATFORM[$ad['PLATFORM']]['NAME'];
+				?>
+				<label class="checkbox"><?= $platform ?></label><?
+			}
+			else
+				foreach (\Local\Main\Keygroup::$PLATFORM as $k => $item)
+				{
+					?>
+					<label class="radio">
+						<input type="radio" name="platform" value="<?= $k ?>"<?= $ad['PLATFORM'] == $k ? ' checked' : '' ?>
+							/> <?= $item['NAME'] ?>
+					</label><?
+				}
+
+			?>
 		</div>
 	</div>
 	<fieldset>
@@ -33,37 +47,30 @@ $ad = $component->ad;
 			<div class="span6"><?
 
 				$titleName = $ad['YANDEX'] ? 'Заголовок' : 'Заголовок 1';
-				$max = $ad['YANDEX'] ? 33 : 30;
 				?>
 				<div class="control-group">
 					<label class="control-label" for="title"><?= $titleName ?></label>
 					<div class="controls">
-						<input type="text" id="title" name="title"
-						       data-max="<?= $max ?>" value="<?= $ad['TITLE'] ?>" required />
+						<input type="text" id="title" name="title" value="<?= $ad['TITLE'] ?>" required />
 						<span class="help-inline"></span>
 					</div>
 				</div><?
 
-				if (!$ad['YANDEX'])
-				{
-					?>
-					<div class="control-group">
-						<label class="control-label" for="title_2">Заголовок 2</label>
-						<div class="controls">
-							<input type="text" id="title_2" name="title_2"
-							       data-max="30" value="<?= $ad['TITLE'] ?>" required />
-							<span class="help-inline"></span>
-						</div>
-					</div><?
-				}
+				?>
+				<div class="control-group yandex-hidden">
+					<label class="control-label" for="title_2">Заголовок 2</label>
+					<div class="controls">
+						<input type="text" id="title_2" name="title_2"
+						       data-max="30" value="<?= $ad['TITLE_2'] ?>" required />
+						<span class="help-inline"></span>
+					</div>
+				</div><?
 
-				$max = $ad['YANDEX'] ? 75 : 80;
 				?>
 				<div class="control-group">
 					<label class="control-label" for="text">Текст объявления</label>
 					<div class="controls">
-						<input type="text" id="text" name="text"
-						       data-max="<?= $max ?>" value="<?= $ad['TEXT'] ?>" required />
+						<input type="text" id="text" name="text" value="<?= $ad['TEXT'] ?>" required />
 						<span class="help-inline"></span>
 					</div>
 				</div><?
@@ -85,31 +92,26 @@ $ad = $component->ad;
 				</div><?
 
 				$titleName = $ad['YANDEX'] ? 'Отображаемая ссылка' : 'Отображаемая ссылка 1';
-				$max = $ad['YANDEX'] ? 20 : 15;
 				?>
 				<div class="control-group">
 					<label class="control-label" for="link"><?= $titleName ?></label>
 					<div class="controls">
 						<input type="text" value="<?= $scheme ?>://<?= $project['URL'] ?>/" disabled />
-						<input type="text" id="link" name="link"
-						       data-max="<?= $max ?>" value="<?= $ad['LINK'] ?>" />
+						<input type="text" id="link" name="link" value="<?= $ad['LINK'] ?>" />
 						<span class="help-inline"></span>
 					</div>
 				</div><?
 
-				if (!$ad['YANDEX'])
-				{
-					?>
-					<div class="control-group">
-						<label class="control-label" for="link_2">Отображаемая ссылка 2</label>
-						<div class="controls">
-							<input type="text" value="<?= $scheme ?>://<?= $project['URL'] ?>/" disabled />
-							<input type="text" id="link_2" name="link_2"
-							       data-max="15" value="<?= $ad['LINK_2'] ?>" />
-							<span class="help-inline"></span>
-						</div>
-					</div><?
-				}
+				?>
+				<div class="control-group yandex-hidden">
+					<label class="control-label" for="link_2">Отображаемая ссылка 2</label>
+					<div class="controls">
+						<input type="text" value="<?= $scheme ?>://<?= $project['URL'] ?>/" disabled />
+						<input type="text" id="link_2" name="link_2"
+						       data-max="15" value="<?= $ad['LINK_2'] ?>" />
+						<span class="help-inline"></span>
+					</div>
+				</div><?
 
 				?>
 			</div>
@@ -154,12 +156,9 @@ $ad = $component->ad;
 			</div>
 		</div><?
 
-		if ($ad['YANDEX'])
-		{
-			$isSearch = $ad['SEARCH'];
-			$picId = $ad['PICTURE'];
-			include('pic.php');
-		}
+		$isSearch = $ad['SEARCH'];
+		$picId = $ad['PICTURE'];
+		include('pic.php');
 
 		?>
 	</fieldset><?

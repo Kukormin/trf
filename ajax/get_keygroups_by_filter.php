@@ -58,11 +58,6 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 		}
 		$keygroups = \Local\Main\Keygroup::getList($category['PROJECT'], $category['ID'], $params);
 
-		$y = $filters['YGSN']['y']['VALUE'];
-		$g = $filters['YGSN']['g']['VALUE'];
-		$s = $filters['YGSN']['s']['VALUE'];
-		$n = $filters['YGSN']['n']['VALUE'];
-		$textView = $filters['VIEW']['style']['VALUE'] == 't';
 		$max = intval($view['DATA']['AD_COUNT']);
 
 		?>
@@ -70,22 +65,25 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 			<thead>
 			<tr><?
 
-				$adPrev = false;
 				foreach ($view['DATA']['COLUMNS'] as $col)
 				{
-					if ($col == 'title' || $col == 'text' || $col == 'preview')
+					if ($col == 'ad')
 					{
-						if (!$adPrev)
+						foreach ($view['DATA']['AD_COLUMNS'] as $adCol)
 						{
+							$column = \Local\Main\View::getAdColumnByCode($adCol);
+							$title = $column['TITLE'] ? ' title="' . $column['TITLE'] . '"' : '';
 							?>
-							<th></th><?
-							$adPrev = true;
+							<th class="col-<?= $adCol ?>"<?= $title ?>><?= $column['NAME'] ?></th><?
 						}
 					}
-					$column = \Local\Main\View::getColumnByCode($col);
-					$title = $column['TITLE'] ? ' title="' . $column['TITLE'] . '"' : '';
-					?>
-					<th<?= $title ?>><?= $column['NAME'] ?></th><?
+					else
+					{
+						$column = \Local\Main\View::getColumnByCode($col);
+						$title = $column['TITLE'] ? ' title="' . $column['TITLE'] . '"' : '';
+						?>
+						<th class="col-<?= $col ?>"<?= $title ?>><?= $column['NAME'] ?></th><?
+					}
 				}
 
 				?>
@@ -102,186 +100,38 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
 					$cnt = 0;
 					foreach ($ads as $ad)
 					{
-						if ($y && $ad['YANDEX'] || $g && !$ad['YANDEX'])
-							if ($s && $ad['SEARCH'] || $n && !$ad['SEARCH'])
-							{
-								$ad['HOST'] = $project['URL'];
-								$ad['SCHEME'] = $category['DATA']['SCHEME'];
-								$fads[] = $ad;
-								$cnt++;
-								if ($max && $cnt >= $max)
-									break;
-							}
+						if ($filters['PLATFORM'][$ad['PLATFORM']]['VALUE'])
+						{
+							$ad['HOST'] = $project['URL'];
+							$ad['SCHEME'] = $category['DATA']['SCHEME'];
+							$fads[] = $ad;
+							$cnt++;
+							if ($max && $cnt >= $max)
+								break;
+						}
 					}
 				}
-				$rs = count($fads) > 1 ? ' rowspan="' . count($fads) . '"' : '';
-
-				?>
-				<tr><?
-
-					$adPrev = false;
-					foreach ($view['DATA']['COLUMNS'] as $col)
-					{
-						if ($col == 'title' || $col == 'text' || $col == 'preview')
-						{
-							if (!$adPrev)
-							{
-								?>
-								<td><?
-
-									foreach ($fads as $ad)
-									{
-										?>
-										<a class="btn edit" target="_blank"
-										   href="<?= \Local\Main\Ad::getHref($category, $item, $ad) ?>"
-										   title="Редактировать объявление"><i></i></a><?
-										break;
-									}
-									?>
-								</td><?
-								$adPrev = true;
-							}
-						}
-
-						$class = '';
-						if ($col == 'preview')
-							$class = ' class="preview"';
-						$rowspan = $rs;
-						if ($col == 'title' || $col == 'text' || $col == 'preview')
-							$rowspan = '';
-
-						?><td<?= $class ?><?= $rowspan ?>><?
-
-						if ($col == 'cb')
-						{
-							$checked = '';
-							$inIds = in_array($item['ID'], $ids);
-							if ($_REQUEST['select_all'] && !$inIds || !$_REQUEST['select_all'] && $inIds)
-								$checked = ' checked';
-							?><input class="select_item" type="checkbox" id="<?= $item['ID'] ?>"<?= $checked ?> /><?
-						}
-						elseif ($col == 'name')
-						{
-							$href = \Local\Main\Keygroup::getHref($category, $item);
-							?><a href="<?= $href ?>"><?= $item['NAME'] ?></a><?
-						}
-						elseif ($col == 'ws')
-						{
-							?><?= $item['WORDSTAT'] ?><?
-						}
-						elseif ($col == 'mark')
-						{
-							foreach ($item['MARKS'] as $markId)
-							{
-								$mark = \Local\Main\Mark::getById($markId);
-								echo ' ';
-								echo $mark['HTML'];
-							}
-						}
-						elseif ($col == 'title')
-						{
-							foreach ($fads as $ad)
-							{
-								?><?= $ad['TITLE'] ?><?
-								if ($ad['TITLE_2'])
-								{
-									?><br /><?= $ad['TITLE_2'] ?><?
-								}
-								break;
-							}
-						}
-						elseif ($col == 'text')
-						{
-							foreach ($fads as $ad)
-							{
-								?><?= $ad['TEXT'] ?><?
-								break;
-							}
-						}
-						elseif ($col == 'preview')
-						{
-							foreach ($fads as $ad)
-							{
-								\Local\Main\Ad::printExample($ad);
-								break;
-							}
-						}
-						elseif ($col == 'action')
-						{
-							if ($y)
-							{
-								?>
-								<a class="btn add_yandex_ad" target="_blank"
-								   href="<?= \Local\Main\Ad::getAddYandexHref($category, $item) ?>"
-								   title="Добавить объявление для <?= DIRECT_NAME ?>"><b></b><i></i></a><?
-							}
-							if ($g)
-							{
-								?>
-								<a class="btn add_google_ad" target="_blank"
-								   href="<?= \Local\Main\Ad::getAddGoogleHref($category, $item) ?>"
-								   title="Добавить объявление для <?= ADWORDS_NAME ?>"><b></b><i></i></a><?
-							}
-						}
-
-						?></td><?
-					}
-
-					?>
-				</tr><?
+				$adCount = count($fads);
+				if (!$fads)
+					$fads[] = array();
 
 				foreach ($fads as $i => $ad)
 				{
-					if (!$i)
-						continue;
-
-					?>
-					<tr><?
-
-						?><td>
-							<a class="btn edit" target="_blank"
-							   href="<?= \Local\Main\Ad::getHref($category, $item, $ad) ?>"
-							   title="Редактировать объявление"><i></i></a>
-						</td><?
-
-						foreach ($view['DATA']['COLUMNS'] as $col)
-						{
-							if ($col == 'title' || $col == 'text' || $col == 'preview')
-							{
-
-								$class = '';
-								if ($col == 'preview')
-									$class = ' class="preview"';
-
-								?><td<?= $class ?>><?
-
-								if ($col == 'title')
-								{
-									?><?= $ad['TITLE'] ?><?
-									if ($ad['TITLE_2'])
-									{
-										?><br/><?= $ad['TITLE_2'] ?><?
-									}
-								}
-								elseif ($col == 'text')
-								{
-									?><?= $ad['TEXT'] ?><?
-								}
-								elseif ($col == 'preview')
-								{
-									\Local\Main\Ad::printExample($ad);
-								}
-
-								?></td><?
-							}
-						}
-
-						?>
-					</tr><?
+					\Local\Main\Ad::printRow($ad, $item, $category, $i == 0, $adCount, $view,
+						$filters['PLATFORM'], $ids);
 				}
+
 			}
 
 			?>
+			</tbody>
+			<tbody class="hidden"><?
+
+				// Строка-шаблон для добавления объявлений
+				\Local\Main\Ad::printRow(array(), array(), array(), false, 1, $view,
+					$filters['PLATFORM']);
+
+				?>
 			</tbody>
 		</table>
 		<?

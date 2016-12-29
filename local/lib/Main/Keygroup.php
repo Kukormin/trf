@@ -35,11 +35,11 @@ class Keygroup
 	 */
 	const TYPE_MANUAL = 0;
 	/**
-	 * Фраза создана вручную
+	 * Фраза создана автоматически из базовых слов
 	 */
 	const TYPE_BASE = 1;
 	/**
-	 * Фраза создана вручную
+	 * Фраза деактивирована
 	 */
 	const TYPE_DEACTIVE = 2;
 
@@ -150,6 +150,28 @@ class Keygroup
 		),
 	);
 
+	/**
+	 * @var array настройки вида ключевых фраз
+	 */
+	public static $PLATFORM = array(
+		'ys' => array(
+			'NAME' => 'Яндекс.Поиск',
+			'VALUE' => 1,
+		),
+		'yn' => array(
+			'NAME' => 'Яндекс.Сети',
+			'VALUE' => 1,
+		),
+		'gs' => array(
+			'NAME' => 'Google.Поиск',
+			'VALUE' => 1,
+		),
+		'gn' => array(
+			'NAME' => 'Google.Сети',
+			'VALUE' => 1,
+		),
+	);
+
 	public static function getPageSizes()
 	{
 		$user = User::getCurrentUser();
@@ -247,15 +269,35 @@ class Keygroup
 			$ygsn[$code] = $item;
 		}
 
+		$platformSelected = array();
+		$platform = array();
+		foreach (self::$PLATFORM as $code => $item)
+		{
+			if ($_REQUEST['mode'] == 'ajax')
+			{
+				$item['VALUE'] = $_REQUEST[$code] ? 1 : 0;
+				$platformSelected[$code] = $item['VALUE'];
+			}
+			else
+			{
+				if (isset($user['DATA']['PLATFORM'][$code]))
+					$item['VALUE'] = $user['DATA']['PLATFORM'][$code];
+			}
+
+			$platform[$code] = $item;
+		}
+
 		if ($_REQUEST['mode'] == 'ajax')
 			User::saveData(array(
 				'FILTERS_SELECTED' => $filtersSelected,
 				'YGSN' => $ygsnSelected,
+				'PLATFORM' => $platformSelected,
 			));
 
 		return array(
 			'FILTERS' => $filters,
 		    'YGSN' => $ygsn,
+		    'PLATFORM' => $platform,
 		);
 	}
 
@@ -271,6 +313,33 @@ class Keygroup
 				'n' => $_GET['ygsn'][3] == '1' ? 1 : 0,
 			);
 			User::saveData(array('YGSN' => $ygsn));
+			/** global CMain $APPLICATION */
+			global $APPLICATION;
+			LocalRedirect($APPLICATION->GetCurDir());
+		}
+	}
+
+	public static function checkPlatformOnProlog()
+	{
+		// Обработка входящих параметров
+		if (isset($_GET['ygsn']))
+		{
+			$ygsn = array(
+				'y' => $_GET['ygsn'][0] == '1' ? 1 : 0,
+				'g' => $_GET['ygsn'][1] == '1' ? 1 : 0,
+				's' => $_GET['ygsn'][2] == '1' ? 1 : 0,
+				'n' => $_GET['ygsn'][3] == '1' ? 1 : 0,
+			);
+			$platform = array(
+				'ys' => $ygsn['y'] && $ygsn['s'],
+				'yn' => $ygsn['y'] && $ygsn['n'],
+				'gs' => $ygsn['g'] && $ygsn['s'],
+				'gn' => $ygsn['g'] && $ygsn['n'],
+			);
+			User::saveData(array(
+				'YGSN' => $ygsn,
+				'PLATFORM' => $platform,
+			));
 			/** global CMain $APPLICATION */
 			global $APPLICATION;
 			LocalRedirect($APPLICATION->GetCurDir());

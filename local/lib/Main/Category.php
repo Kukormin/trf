@@ -4,6 +4,7 @@ namespace Local\Main;
 use Bitrix\Highloadblock\HighloadBlockTable;
 use Bitrix\Main\Entity\Query;
 use Local\System\ExtCache;
+use Local\Yandex\Wordstat;
 
 /**
  * Категория - рекламируемая страница или группа страниц (карточки товаров)
@@ -149,6 +150,47 @@ class Category
 	}
 
 	/**
+	 * Формирует фразу из базовых слов
+	 * @param $item
+	 * @return string
+	 */
+	public static function getWordFromBase($item)
+	{
+		$word = '';
+		foreach ($item as $w)
+		{
+			if (!$w)
+				continue;
+			if ($word)
+				$word .= ' ';
+			$word .= $w;
+		}
+		return $word;
+	}
+
+	private static function getBaseStat($item)
+	{
+		$return = array(
+			'KW' => self::getWordFromBase($item),
+			'KEY' => '',
+			'CNT' => 0,
+		);
+		if ($return['KW'])
+		{
+			foreach ($item as $i => $word)
+				if ($word)
+				{
+					if ($return['KEY'])
+						$return['KEY'] .= '|';
+					$return['KEY'] .= $i . '#' . $word;
+					$return['CNT']++;
+				}
+		}
+
+		return $return;
+	}
+
+	/**
 	 * Рекурсивный метод перебора слов для составления фраз на основе базовых слов
 	 * @param $key
 	 * @param $level
@@ -173,7 +215,7 @@ class Category
 	}
 
 	/**
-	 * На основании базовых слов категории формирует ключевые фразы
+	 * Комбинирует базовые слова категории
 	 * @param $category
 	 * @return array
 	 */
@@ -206,7 +248,18 @@ class Category
 		$res = array();
 		self::f(array(), 0, 0, $words, $max, $res);
 
-		$clearCache = false;
+		return $res;
+	}
+
+	/**
+	 * Возвращает результат комбинирования базовых слов со статистикой
+	 * @param $category
+	 * @return array
+	 */
+	public static function comboReport($category)
+	{
+		$res = self::combo($category);
+
 		// существующие в категории ключевые слова
 		$keygroups = Keygroup::getList($category['PROJECT'], $category['ID']);
 		$byName = array();
@@ -214,91 +267,109 @@ class Category
 			$byName[$kg['NAME']] = $kg['ID'];
 
 		$result = array(
-			'NEW' => count($res),
-		    'EX' => count($byName),
-		    'ADD' => 0,
-		    'ACTIV' => 0,
-		    'DEACTIV' => 0,
-		    'TO_BASE' => 0,
-		    'NO' => 0,
-		    'USER' => 0,
-		    'OLD' => 0,
+			'GENERATE' => 0,
+		    'CURRENT' => count($byName),
+		    'EX_BASE' => 0,
+		    'EX_ADD' => 0,
+		    'NEW' => 0,
+		    'ITEMS' => array(),
 		);
+
+		$ws = new Wordstat($category['ID']);
 
 		foreach ($res as $item)
 		{
-			$baseCount = 0;
-			$kw = '';
-			$base = '';
-			foreach ($item as $i => $word)
-				if ($word)
-				{
-					if ($kw)
-					{
-						$kw .= ' ';
-						$base .= '|';
-					}
-					$kw .= $word;
-					$base .= $i . '#' . $word;
-					$baseCount++;
-				}
-
-			if (!$kw)
+			$base = self::getBaseStat($item);
+			if (!$base['CNT'])
 				continue;
 
-			$id = $byName[$kw];
+			$id = intval($byName[$base['KW']]);
+			$item = array(
+				'KW' => $base['KW'],
+				'BASE' => $base['KEY'],
+			    'ID' => $id,
+			    'WS' => $ws->getValue($base['KW']),
+			);
 			if ($id)
 			{
-				unset($byName[$kw]);
 				$kg = $keygroups['ITEMS'][$id];
-				if ($base != $kg['BASE'] || Keygroup::TYPE_BASE != $kg['TYPE'])
-				{
-					Keygroup::updateBaseType($id, $base, $baseCount, Keygroup::TYPE_BASE);
-					$clearCache = true;
-					if ($kg['TYPE'] == Keygroup::TYPE_MANUAL)
-						$result['TO_BASE']++;
-					elseif ($kg['TYPE'] == Keygroup::TYPE_DEACTIVE)
-						$result['ACTIVE']++;
-					else
-						$result['NO']++;
-				}
-				else
-					$result['NO']++;
+				if ($base['KEY'] == $kg['BASE'])
+					$item['TYPE'] = 'base';
+				elseif (Keygroup::TYPE_BASE != $kg['TYPE'])
+					$item['TYPE'] = 'add';
 			}
 			else
-			{
-				Keygroup::add($category['PROJECT'], $category['ID'], $kw, $base, $baseCount, Keygroup::TYPE_BASE);
-				$clearCache = true;
-				$result['ADD']++;
-			}
+				$item['TYPE'] = 'new';
+
+			$result['ITEMS'][] = $item;
+			if ($item['TYPE'] == 'base')
+				$result['EX_BASE']++;
+			elseif ($item['TYPE'] == 'add')
+				$result['EX_ADD']++;
+			elseif ($item['TYPE'] == 'new')
+				$result['NEW']++;
+			$result['GENERATE']++;
 		}
 
-		foreach ($byName as $id)
+		return $result;
+	}
+
+	/**
+	 * Добавляет в категорию отмеченные фразы
+	 * @param $category
+	 * @param $checked
+	 */
+	public static function comboAdd($category, $checked)
+	{
+		$res = self::combo($category);
+
+		$clearCache = false;
+		// существующие в категории ключевые слова
+		$keygroups = Keygroup::getList($category['PROJECT'], $category['ID']);
+		$byName = array();
+		foreach ($keygroups['ITEMS'] as $kg)
+			$byName[$kg['NAME']] = $kg['ID'];
+
+		foreach ($res as $item)
 		{
-			$kg = $keygroups['ITEMS'][$id];
-			if ($kg['TYPE'] == Keygroup::TYPE_MANUAL)
-			{
-				$result['NO']++;
-				$result['USER']++;
-			}
-			elseif ($kg['TYPE'] == Keygroup::TYPE_DEACTIVE)
-			{
-				$result['NO']++;
-				$result['OLD']++;
-			}
+			$base = self::getBaseStat($item);
+			if (!$base['CNT'])
+				continue;
+
+			if (!$checked[$base['KEY']])
+				continue;
+
+			$id = $byName[$base['KW']];
+			if ($id)
+				Keygroup::updateBaseType($id, $base['KEY'], $base['CNT'], Keygroup::TYPE_BASE);
 			else
-			{
-				Keygroup::deactivate($id);
-				$clearCache = true;
-				$result['DEACTIV']++;
-				$result['OLD']++;
-			}
+				Keygroup::add($category['PROJECT'], $category['ID'], $base['KW'], $base['KEY'], $base['CNT'],
+					Keygroup::TYPE_BASE);
+
+			$clearCache = true;
 		}
 
 		if ($clearCache)
 			Keygroup::clearCache($category['PROJECT'], $category['ID']);
+	}
 
-		return $result;
+	public static function wordstatTask($data)
+	{
+		$category = self::getById($data['CATEGORY'], $data['PROJECT']);
+		if (!$category)
+			return false;
+
+		if ($data['TYPE'] == 'combo')
+		{
+			$items = self::combo($category);
+			$ws = new Wordstat($category['ID']);
+			$ws->checkBaseWords($items);
+		}
+
+		$href = self::getHref($category);
+		$text = 'Проверка частотности завершена. Перейти в <a href="' . $href . '">категорию</a>';
+
+		return $text;
 	}
 
 	public static function additionalWords($category, $add, $deactive)

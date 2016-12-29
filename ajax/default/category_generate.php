@@ -1,7 +1,7 @@
 <?
 $return = array();
 
-$categoryId = intval($_REQUEST['cid']);
+/*$categoryId = intval($_REQUEST['cid']);
 $projectId = intval($_REQUEST['pid']);
 $category = \Local\Main\Category::getById($categoryId, $projectId);
 
@@ -31,7 +31,8 @@ if ($category)
 	$html = ob_get_contents();
 	ob_end_clean();
 
-	$return['alerts'] = array(
+	$return['messages'] = array(
 		array($html, 'success'),
 	);
 }
+*/

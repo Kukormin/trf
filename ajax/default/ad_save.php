@@ -11,8 +11,8 @@ $category = \Local\Main\Category::getById($categoryId, $projectId);
 if ($category)
 {
 	$newAd = array(
-		'YANDEX' => intval($_REQUEST['yandex']),
-		'SEARCH' => intval($_REQUEST['search']),
+		'YANDEX' => $_REQUEST['platform'] == 'ys' || $_REQUEST['platform'] == 'yn' ? 1 : 0,
+		'SEARCH' => $_REQUEST['platform'] == 'ys' || $_REQUEST['platform'] == 'gs' ? 1 : 0,
 		'TITLE' => htmlspecialchars($_REQUEST['title']),
 		'TITLE_2' => htmlspecialchars($_REQUEST['title_2']),
 		'TEXT' => htmlspecialchars($_REQUEST['text']),
@@ -27,16 +27,17 @@ if ($category)
 	if ($adId)
 	{
 		$ad = \Local\Main\Ad::getById($adId, $keygroupId);
-		$ad = \Local\Main\Ad::update($ad, $newAd);
+		\Local\Main\Ad::update($ad, $newAd);
 	}
 	else
 	{
 		$newAd['GROUP'] = $keygroupId;
 		$newAd['CATEGORY'] = $categoryId;
 		$newAd['PROJECT'] = $projectId;
-		$ad = \Local\Main\Ad::add($newAd);
+		\Local\Main\Ad::add($newAd);
 	}
 
+	\Local\Main\Ad::getByKeygroup($keygroupId, true);
 	$keygroup = \Local\Main\Keygroup::getById($keygroupId, $categoryId, $projectId);
 	$return['redirect'] = \Local\Main\Keygroup::getHref($category, $keygroup);
 }

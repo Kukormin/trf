@@ -46,13 +46,13 @@ if ($category)
 		$html = ob_get_contents();
 		ob_end_clean();
 
-		$return['alerts'] = array(
+		$return['messages'] = array(
 			array($html, 'success'),
 		);
 	}
 	else
 	{
-		$return['alerts'] = array(
+		$return['messages'] = array(
 			array('<p>Нет изменений</p>', 'block'),
 		);
 	}

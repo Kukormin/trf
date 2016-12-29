@@ -53,10 +53,13 @@ class Ad
 			while ($item = $rsItems->Fetch())
 			{
 				$id = intval($item['ID']);
+				$y = intval($item['UF_YANDEX']);
+				$s = intval($item['UF_SEARCH']);
 				$return[$id] = array(
 					'ID' => $id,
-					'YANDEX' => intval($item['UF_YANDEX']),
-					'SEARCH' => intval($item['UF_SEARCH']),
+					'YANDEX' => $y,
+					'SEARCH' => $s,
+					'PLATFORM' => ($y ? 'y' : 'g') . ($s ? 's' : 'n'),
 					'TITLE' => $item['UF_TITLE'],
 					'TITLE_2' => $item['UF_TITLE_2'],
 					'TEXT' => $item['UF_TEXT'],
@@ -80,18 +83,14 @@ class Ad
 
 	public static function getById($id, $keygroupId, $refreshCache = false)
 	{
+		$id = intval($id);
 		$all = self::getByKeygroup($keygroupId, $refreshCache);
 		return $all[$id];
 	}
 
-	public static function getAddYandexHref($category, $keygroup)
+	public static function getAddHref($category, $keygroup)
 	{
-		return Keygroup::getHref($category, $keygroup) . self::URL . '/ynew/';
-	}
-
-	public static function getAddGoogleHref($category, $keygroup)
-	{
-		return Keygroup::getHref($category, $keygroup) . self::URL . '/gnew/';
+		return Keygroup::getHref($category, $keygroup) . self::URL . '/new/';
 	}
 
 	public static function getAddTemplHref($category, $keygroup, $templ)
@@ -114,10 +113,7 @@ class Ad
 			$fields['UF_' . $key] = $value;
 		$result = $dataClass::add($fields);
 		$id = $result->getId();
-
-		$ad = self::getById($id, $ad['GROUP'], true);
-		$ad['NEW'] = true;
-		return $ad;
+		return $id;
 	}
 
 	public static function update($ad, $newAd)
@@ -135,12 +131,17 @@ class Ad
 			$entity = HighloadBlockTable::compileEntity($entityInfo);
 			$dataClass = $entity->getDataClass();
 			$dataClass::update($ad['ID'], $update);
-
-			$ad = self::getById($ad['ID'], $ad['GROUP'], true);
-			$ad['UPDATED'] = true;
 		}
+	}
 
-		return $ad;
+	public static function delete($ad)
+	{
+		$entityInfo = HighloadBlockTable::getById(static::ENTITY_ID)->Fetch();
+		$entity = HighloadBlockTable::compileEntity($entityInfo);
+		$dataClass = $entity->getDataClass();
+		$dataClass::delete($ad['ID']);
+
+		self::getByKeygroup($ad['GROUP'], true);
 	}
 
 	public static function addByTemplate($keygroup, $templ, $category)
@@ -150,6 +151,7 @@ class Ad
 		$ad['CATEGORY'] = $category['ID'];
 		$ad['PROJECT'] = $category['PROJECT'];
 		self::add($ad);
+		self::getByKeygroup($keygroup['ID'], true);
 	}
 
 	public static function generateByTemplate($keygroup, $templ, $category)
@@ -157,6 +159,7 @@ class Ad
 		$ad = array(
 			'YANDEX' => $templ['YANDEX'],
 			'SEARCH' => $templ['SEARCH'],
+			'PLATFORM' => ($templ['YANDEX'] ? 'y' : 'g') . ($templ['SEARCH'] ? 's' : 'n'),
 			'URL' => $category['DATA']['PATH'],
 			'LINKSET' => $templ['DATA']['LINKSET'],
 			'VCARD' => $templ['DATA']['VCARD'],
@@ -501,4 +504,149 @@ class Ad
 			</table>
 		</div><?
 	}
+
+	public static function printRow($ad, $kg, $category, $first, $adCount, $view, $platform, $checkedIds = array())
+	{
+		$rs = $adCount > 1 ? ' rowspan="' . $adCount . '"' : '';
+		if (!$adCount)
+			$adCount = 1;
+		$cnt = $first ? ' data-cnt="' . $adCount . '"' : '';
+		$adId = intval($ad['ID']);
+		?>
+		<tr data-id="<?= $adId ?>" data-kgid="<?= $kg['ID'] ?>"<?= $cnt ?>><?
+
+			foreach ($view['DATA']['COLUMNS'] as $col)
+			{
+				if ($col == 'ad')
+				{
+					foreach ($view['DATA']['AD_COLUMNS'] as $adCol)
+					{
+						$etd = $adCol == 'cb' ? '' : ' e-td';
+						?>
+						<td class="ad-td<?= $etd ?>" data-col="<?= $adCol ?>"><?
+
+							if ($adCol == 'cb')
+							{
+								$checked = '';
+								/*$inIds = in_array($kg['ID'], $checkedIds);
+								if ($_REQUEST['select_all'] && !$inIds || !$_REQUEST['select_all'] && $inIds)
+									$checked = ' checked';*/
+								?><input class="select_ad" type="checkbox" id="<?= $ad['ID'] ?>"<?= $checked ?> /><?
+							}
+							elseif ($adCol == 'platform')
+							{
+								/*?><a class="btn ed" target="_blank"
+								     href="<?= self::getHref($category, $kg, $ad) ?>"
+								     title="Редактировать объявление"><i></i></a>
+								<span class="btn delete" title="Удалить объявление"><i></i></span><?*/
+
+								$pl = '';
+								if ($adId)
+									$pl = $ad['PLATFORM'];
+								else
+								{
+									foreach ($platform as $k => $v)
+									{
+										if ($v['VALUE'])
+										{
+											$pl = $k;
+											break;
+										}
+									}
+								}
+
+								?><span class="ad-icon <?= $pl ?>" data-value="<?= $pl ?>"
+								        title="<?= $platform[$pl]['NAME'] ?>"></span><?
+							}
+							elseif ($adCol == 'title')
+							{
+								?><?= $ad['TITLE'] ?><?
+							}
+							elseif ($adCol == 'title2')
+							{
+								?><?= $ad['TITLE_2'] ?><?
+							}
+							elseif ($adCol == 'text')
+							{
+								?><?= $ad['TEXT'] ?><?
+							}
+							elseif ($adCol == 'url')
+							{
+								?><?= $ad['URL'] ?><?
+							}
+							elseif ($adCol == 'link')
+							{
+								?><?= $ad['LINK'] ?><?
+							}
+							elseif ($adCol == 'link2')
+							{
+								?><?= $ad['LINK_2'] ?><?
+							}
+							elseif ($adCol == 'preview')
+							{
+								if ($adId)
+									self::printExample($ad);
+							}
+							elseif ($adCol == 'pr')
+							{
+
+							}
+
+						?></td><?
+
+					}
+				}
+				else
+				{
+					$hidden = $first ? '' : ' h';
+
+					?>
+					<td class="vs-td<?= $hidden ?>"<?= $rs ?> data-col="<?= $col ?>"><?
+
+						if ($first)
+						{
+							if ($col == 'cb')
+							{
+								$checked = '';
+								$inIds = in_array($kg['ID'], $checkedIds);
+								if ($_REQUEST['select_all'] && !$inIds || !$_REQUEST['select_all'] && $inIds)
+									$checked = ' checked';
+								?><input class="select_item" type="checkbox" id="<?= $kg['ID'] ?>"<?= $checked ?> /><?
+							}
+							elseif ($col == 'name')
+							{
+								$href = Keygroup::getHref($category, $kg);
+								?><a href="<?= $href ?>"><?= $kg['NAME'] ?></a><?
+							}
+							elseif ($col == 'ws')
+							{
+								?><?= $kg['WORDSTAT'] ?><?
+							}
+							elseif ($col == 'mark')
+							{
+								foreach ($kg['MARKS'] as $markId)
+								{
+									$mark = Mark::getById($markId);
+									echo ' ';
+									echo $mark['HTML'];
+								}
+							}
+							elseif ($col == 'action')
+							{
+								if ($view['EDIT_MODE'])
+								{
+									?><a class="btn add" target="_blank" id="add_<?= $kg['ID'] ?>"
+									     href="<?= self::getAddHref($category, $kg) ?>"
+									     title="Добавить объявление"><i></i></a><?
+								}
+							}
+						}
+
+					?></td><?
+				}
+			}
+
+		?></tr><?
+	}
+
 }

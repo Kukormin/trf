@@ -33,36 +33,92 @@ class View
 			'NAME' => '',
 		    'TITLE' => 'Чекбокс выбора',
 		    'REQUIRED' => true,
+		    'FIXED' => true,
 		),
 		'name' => array(
 			'NAME' => 'Ключевая фраза',
 			'REQUIRED' => true,
+			'FIXED' => true,
 		),
 		'ws' => array(
 			'NAME' => 'W',
 		    'TITLE' => 'Частотность wordstat.yandex.ru',
 		),
 		'mark' => array(
-			'NAME' => 'Метки',
+			'NAME' => 'М',
+			'TITLE' => 'Метки',
 		),
-		'title' => array(
-			'NAME' => 'Заголовки',
+		'ad' => array(
+			'NAME' => 'Столбцы объявления',
 		),
-		'text' => array(
-			'NAME' => 'Текст',
-		),
-		'preview' => array(
-			'NAME' => 'Предварительный просмотр',
+		'pr' => array(
+			'NAME' => 'Объявления',
+			'TITLE' => 'Иконки предварительного просмотра',
 		),
 		'action' => array(
-			'NAME' => 'Действия',
+			'NAME' => '',
+			'TITLE' => 'Действия',
 			'REQUIRED' => true,
 		),
 	);
 
+	/**
+	 * Набор стобцов
+	 * @var array
+	 */
+	public static $AD_COLUMNS = array(
+		'cb' => array(
+			'NAME' => '',
+			'TITLE' => 'Чекбокс выбора',
+			'REQUIRED' => true,
+			'FIXED' => true,
+		),
+		'platform' => array(
+			'NAME' => '',
+			'TITLE' => 'Платформа',
+		),
+		'title' => array(
+			'NAME' => 'Заголовок',
+		),
+		'title2' => array(
+			'NAME' => 'Заголовок 2',
+		),
+		'text' => array(
+			'NAME' => 'Текст',
+		),
+		'url' => array(
+			'NAME' => 'Ссылка',
+		),
+		'link' => array(
+			'NAME' => 'ОС',
+			'TITLE' => 'Отображаемая ссылка',
+		),
+		'link2' => array(
+			'NAME' => 'ОС 2',
+			'TITLE' => 'Отображаемая ссылка 2',
+		),
+		'preview' => array(
+			'NAME' => 'Предварительный просмотр',
+		    'HIDE_EDIT_MODE' => true,
+		),
+	);
+
+	/**
+	 * Наборы колонок по-умолчанию
+	 * @var array
+	 */
+	public static $DEFAULT_COLUMNS = array('cb', 'name', 'ws', 'mark', 'pr', 'action');
+	public static $DEFAULT_COLUMNS_EM = array('cb', 'name', 'ad', 'action');
+	public static $DEFAULT_AD_COLUMNS = array('cb', 'platform', 'title', 'text');
+
 	public static function getColumnByCode($code)
 	{
 		return self::$COLUMNS[$code];
+	}
+
+	public static function getAdColumnByCode($code)
+	{
+		return self::$AD_COLUMNS[$code];
 	}
 
 	public static function getByUserId($userId, $refreshCache = false)
@@ -97,15 +153,7 @@ class View
 			while ($item = $rsItems->Fetch())
 			{
 				$data = json_decode($item['DETAIL_TEXT'], true);
-				$showAd = false;
-				foreach ($data['COLUMNS'] as $col)
-				{
-					if ($col == 'title' || $col == 'text' || $col == 'preview')
-					{
-						$showAd = true;
-						break;
-					}
-				}
+				$showAd = in_array('ad', $data['COLUMNS']);
 				$return[$item['ID']] = array(
 					'ID' => intval($item['ID']),
 					'NAME' => $item['NAME'],
@@ -113,6 +161,7 @@ class View
 					'DATA_ORIG' => $item['DETAIL_TEXT'],
 					'DATA' => $data,
 				    'SHOW_AD' => $showAd,
+				    'EDIT_MODE' => $item['CODE'] == 2 || $item['CODE'] == 12,
 				);
 			}
 
@@ -144,12 +193,17 @@ class View
 		return self::getViewsHref() . 'new/';
 	}
 
+	public static function getEditNewHref()
+	{
+		return self::getViewsHref() . 'enew/';
+	}
+
 	public static function getHref($id)
 	{
 		return self::getViewsHref() . $id . '/';
 	}
 
-	public static function add($view)
+	public static function add($view, $editMode)
 	{
 		$return = array();
 		$userId = User::getCurrentUserId();
@@ -160,14 +214,15 @@ class View
 		$id = $iblockElement->Add(array(
 			'IBLOCK_ID' => self::IBLOCK_ID,
 			'NAME' => $view['NAME'],
+			'CODE' => $editMode ? 12 : 11,
 			'DETAIL_TEXT' => json_encode($view['DATA'], JSON_UNESCAPED_UNICODE),
 			'XML_ID' => $userId,
 		));
 
-		$mark = self::getById($id, true);
-		$mark['NEW'] = true;
+		$view = self::getById($id, true);
+		$view['NEW'] = true;
 
-		return $mark;
+		return $view;
 	}
 
 	public static function addDefaulViews($userId)
@@ -175,21 +230,23 @@ class View
 		$iblockElement = new \CIBlockElement();
 
 		$data = array(
-			'COLUMNS' => array('cb', 'name', 'ws', 'mark', 'title', 'text', 'action'),
+			'COLUMNS' => self::$DEFAULT_COLUMNS,
+			'AD_COLUMNS' => self::$DEFAULT_AD_COLUMNS,
 		);
 		$iblockElement->Add(array(
 			'IBLOCK_ID' => self::IBLOCK_ID,
-			'NAME' => 'Заголовок и текст',
+			'NAME' => 'По-умолчанию',
 			'CODE' => 1,
 			'DETAIL_TEXT' => json_encode($data, JSON_UNESCAPED_UNICODE),
 			'XML_ID' => $userId,
 		));
 		$data = array(
-			'COLUMNS' => array('cb', 'name', 'ws', 'mark', 'preview', 'action'),
+			'COLUMNS' => self::$DEFAULT_COLUMNS_EM,
+			'AD_COLUMNS' => self::$DEFAULT_AD_COLUMNS,
 		);
 		$iblockElement->Add(array(
 			'IBLOCK_ID' => self::IBLOCK_ID,
-			'NAME' => 'Предварительный просмотр',
+			'NAME' => 'По-умолчанию',
 			'CODE' => 2,
 			'DETAIL_TEXT' => json_encode($data, JSON_UNESCAPED_UNICODE),
 			'XML_ID' => $userId,
@@ -233,31 +290,43 @@ class View
 	{
 		$user = User::getCurrentUser();
 
+		$editMode = $user['DATA']['EDIT'];
+		if (isset($_REQUEST['em']))
+			$editMode = intval($_REQUEST['em']);
+
+		$key = $editMode ? 'VIEW_EM' : 'VIEW';
+
 		$view = array();
 		$viewId = $_REQUEST['view'];
 		if ($viewId)
 			$view = self::getById($viewId);
 		if (!$view)
 		{
-			$viewId = $user['DATA']['VIEW'];
+			$viewId = $user['DATA'][$key];
 			if ($viewId)
 				$view = self::getById($viewId);
 		}
 		if (!$view)
 		{
 			$views = self::getByCurrentUser();
-			$view = array_shift($views);
-		}
-		if (!$view)
-		{
-			$views = self::addDefaulViews($user['ID']);
-			$view = array_shift($views);
+			if (!$views)
+				$views = self::addDefaulViews($user['ID']);
+			foreach ($views as $v)
+			{
+				if ($v['EDIT_MODE'] && $editMode ||
+					!$v['EDIT_MODE'] && !$editMode)
+				{
+					$view = $v;
+					break;
+				}
+			}
 		}
 
-		if ($view['ID'] && $user['DATA']['VIEW'] != $view['ID'])
+		if ($view['ID'] && $user['DATA'][$key] != $view['ID'] || $editMode != $user['DATA']['EDIT'])
 		{
 			User::saveData(array(
-				'VIEW' => $view['ID'],
+				$key => $view['ID'],
+			    'EDIT' => $editMode,
 			));
 		}
 

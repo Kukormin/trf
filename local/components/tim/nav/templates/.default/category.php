@@ -20,13 +20,14 @@ if (!$categoryId) {
 else
 {
 	$tabs = array(
-		'main' => 'Сводная таблица',
+		'main' => 'Фразы и объявления',
+		'stat' => 'Статистика',
+		'seach' => 'Поисковые запросы',
+		'base' => 'Комбинатор',
+		'karma' => 'Карма',
+		//'add' => 'Дополнительные фразы',
+		//'templates' => 'Шаблоны',
 		'settings' => 'Настройки',
-		'base' => 'Базовые слова',
-		'add' => 'Дополнительные фразы',
-		'templates' => 'Шаблоны',
-		//'replace' => 'Словарь автозамен',
-		//'weight' => 'Добавки',
 	);
 	if (!$tabs[$tabCode])
 		$tabCode = 'main';
@@ -176,6 +177,21 @@ foreach ($tabs as $code => $name)
 				$filtersActive = $user['DATA']['FILTERS_SHOW'] ? ' class="active"' : '';
 				?>
 				<ul class="nav pull-right">
+					<li id="filter_platform" class="btns"><?
+
+						foreach ($filters['PLATFORM'] as $k => $item)
+						{
+							$active = $item['VALUE'] ? ' class="active"' : '';
+							?><div data-id="<?= $k ?>"<?= $active ?> title="<?= $item['NAME'] ?>">
+								<i class="ad-icon <?= $k ?>"></i><?= $item['NAME']
+							?></div><?
+						}
+
+						?>
+					</li><?
+
+/*
+					?>
 					<li id="filter_ygsn" class="btns ygsn"><?
 
 						foreach ($filters['YGSN'] as $k => $item)
@@ -186,26 +202,51 @@ foreach ($tabs as $code => $name)
 						}
 
 						?>
-					</li>
+					</li><?*/
+
+					?>
 					<li<?= $filtersActive ?>>
 						<a id="filters_toogle" href="javascript:void(0)">Фильтр</a>
-					</li>
-					<li class="btn-group views"><?
+					</li><?
 
-						$views = \Local\Main\View::getByCurrentUser();
+					$views = \Local\Main\View::getByCurrentUser();
+					$active = $user['DATA']['EDIT'] ? ' class="active"' : '';
+					?>
+					<li class="btns">
+						<div<?= $active ?> id="edit_regime">Режим правки</div>
+					</li><?
+
+					$style = $user['DATA']['EDIT'] ? ' style="display:none;"' : '';
+					?>
+					<li class="btn-group views" id="views-um"<?= $style ?>><?
+
+						$name = '';
+						$fName = '';
+						$selectedView = 0;
 						foreach ($views as $view)
 						{
-							if ($view['CODE'])
+							if ($view['EDIT_MODE'])
+								continue;
+
+							if (!$selectedView)
 							{
-								$active = $view['ID'] == $user['DATA']['VIEW'] ? ' active' : '';
-								?>
-								<button class="btn view_change<?= $active ?>" title="<?= $view['NAME'] ?>"
-								        data-id="<?= $view['ID'] ?>"><?= $view['CODE'] ?></button><?
+								$fName = $view['NAME'];
+								$selectedView = $view['ID'];
+							}
+
+							if ($view['ID'] == $user['DATA']['VIEW'])
+							{
+								$name = $view['NAME'];
+								$selectedView = $view['ID'];
+								break;
 							}
 						}
+						if (!$name)
+							$name = $fName;
 
 						?>
 						<button class="btn dropdown-toggle" data-toggle="dropdown">
+							<i><?= $name ?></i>
 							<span class="caret"></span>
 						</button>
 						<ul class="dropdown-menu pull-right"><?
@@ -213,16 +254,79 @@ foreach ($tabs as $code => $name)
 							$showDivider = false;
 							foreach ($views as $view)
 							{
-								if (!$view['CODE'])
-								{
-									$active = $view['ID'] == $user['DATA']['VIEW'] ? ' active' : '';
-									?>
-									<li>
-										<a class="view_change<?= $active ?>" href="javascript:void(0)"
-										   data-id="<?= $view['ID'] ?>"><?= $view['NAME'] ?></a>
-									</li><?
-									$showDivider = true;
-								}
+								if ($view['EDIT_MODE'])
+									continue;
+
+								$active = $view['ID'] == $selectedView ? ' active' : '';
+								?>
+								<li>
+									<a class="view_change<?= $active ?>" href="javascript:void(0)"
+									   data-id="<?= $view['ID'] ?>"><?= $view['NAME'] ?></a>
+								</li><?
+								$showDivider = true;
+							}
+
+							if ($showDivider)
+							{
+								?>
+								<li class="divider"></li><?
+							}
+
+							?>
+							<li>
+								<a id="view_setings" href="<?= \Local\Main\View::getViewsHref() ?>">Настройки</a>
+							</li>
+						</ul>
+					</li><?
+
+					$style = $user['DATA']['EDIT'] ? '' : ' style="display:none;"';
+					?>
+					<li class="btn-group views" id="views-em"<?= $style ?>><?
+
+						$name = '';
+						$fName = '';
+						$selectedView = 0;
+						foreach ($views as $view)
+						{
+							if (!$view['EDIT_MODE'])
+								continue;
+
+							if (!$selectedView)
+							{
+								$fName = $view['NAME'];
+								$selectedView = $view['ID'];
+							}
+
+							if ($view['ID'] == $user['DATA']['VIEW_EM'])
+							{
+								$name = $view['NAME'];
+								$selectedView = $view['ID'];
+								break;
+							}
+						}
+						if (!$name)
+							$name = $fName;
+
+						?>
+						<button class="btn dropdown-toggle" data-toggle="dropdown">
+							<i><?= $name ?></i>
+							<span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu pull-right"><?
+
+							$showDivider = false;
+							foreach ($views as $view)
+							{
+								if (!$view['EDIT_MODE'])
+									continue;
+
+								$active = $view['ID'] == $selectedView ? ' active' : '';
+								?>
+								<li>
+								<a class="view_change<?= $active ?>" href="javascript:void(0)"
+								   data-id="<?= $view['ID'] ?>"><?= $view['NAME'] ?></a>
+								</li><?
+								$showDivider = true;
 							}
 
 							if ($showDivider)
@@ -249,10 +353,57 @@ foreach ($tabs as $code => $name)
 		// ======================================================================
 
 		// Контейнер фраз (подгрузится аяксом)
+		$class = $user['DATA']['EDIT'] ? ' class="edit-mode"' : '';
 		?>
-		<div id="keygroup-table">
+		<div class="copy_area">
+			<textarea class="copy_textarea" id="kg_copy_textarea"></textarea>
+		</div>
+		<div id="keygroup-table-wrap">
+			<div id="keygroup-table"<?= $class ?>>
 
+			</div>
+			<div class="edit">
+				<input type="text" />
+			</div>
+			<ul class="dropdown-menu" id="platform-menu" role="menu"><?
+
+				foreach ($filters['PLATFORM'] as $k => $item)
+				{
+					$disabled = $item['VALUE'] ? '' : ' class="disabled"';
+					?>
+					<li<?= $disabled ?>>
+						<a href="javascript:void(0)" data-code="<?= $k ?>">
+							<i class="ad-icon <?= $k ?>"></i>
+							<?= $item['NAME'] ?>
+						</a>
+					</li><?
+				}
+
+			?>
+			</ul>
 		</div><?
+
+		// Всплывающее окно подтверждения удаления объявления
+		?>
+		<div id="delete_modal" class="modal hide fade" role="dialog" aria-hidden="true">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="myModalLabel">Удаление объявления</h3>
+			</div>
+			<div class="modal-body">Удалить объявление?</div>
+			<div class="modal-footer">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Отмена</button>
+				<button class="btn btn-primary">Удалить</button>
+			</div>
+		</div><?
+	}
+	//
+	// --------------------------------------
+	//
+	elseif ($code == 'stat')
+	{
+		?>
+		<?
 	}
 	//
 	// --------------------------------------
@@ -338,94 +489,12 @@ foreach ($tabs as $code => $name)
 	elseif ($code == 'base')
 	{
 
-		$max = $category['DATA']['BASE_MAX'];
-		if (!$max)
-			$max = 4;
-
-		$colCount = count($category['DATA']['BASE']);
-		if ($colCount < 7)
-			$colCount = 7;
-		$rowCount = 10;
-		foreach ($category['DATA']['BASE'] as $item)
-		{
-			$cnt = count($item['WORDS']) + 1;
-			if ($cnt > $rowCount)
-				$rowCount = $cnt;
-		}
-
-		?>
-		<div id="copy_area">
-			<textarea id="copy_textarea"></textarea>
-		</div>
-		<form id="base_words">
-			<input type="hidden" name="cid" value="<?= $category['ID'] ?>" />
-			<input type="hidden" name="pid" value="<?= $project['ID'] ?>" />
-			<legend>Семантическое ядро категории</legend>
-			<p>
-				<input type="text" id="max" name="max" value="<?= $max ?>" />
-				Максимальное количество колонок, при формировании ключевой фразы
-			</p>
-			<p>
-				<button class="btn btn-primary" type="button">Генерировать ключевые фразы</button>
-				<span class="loader-big"></span>
-				Всего ключевых фраз: <strong id="total_cnt"></strong>
-			</p>
-			<div id="base_words_wrap">
-				<table id="base_words_table">
-					<thead>
-						<tr class="">
-							<th class="f"></th><?
-							for ($j = 1; $j <= $colCount; $j++)
-							{
-								$char = chr(64 + $j);
-								$right = '';
-								if ($j == $colCount)
-									$right = '<i></i>';
-								?>
-								<th><?= $right ?><?= $char ?></th><?
-							}
-							?>
-						</tr>
-						<tr class="">
-							<th class="f"></th><?
-							for ($j = 1; $j <= $colCount; $j++)
-							{
-								$item = $category['DATA']['BASE'][$j - 1];
-								$checked = $item['REQ'] ? ' checked' : '';
-								?>
-								<th><label><input type="checkbox"<?= $checked ?> /> Обязательно</label></th><?
-							}
-							?>
-						</tr>
-					</thead>
-					<tbody><?
-
-						for ($i = 1; $i <= $rowCount; $i++)
-						{
-							?>
-							<tr>
-								<td class="f"><?= $i ?></td><?
-								for ($j = 1; $j <= $colCount; $j++)
-								{
-									$item = $category['DATA']['BASE'][$j - 1];
-									$word = $item['WORDS'][$i - 1];
-									$class = $item['REQ'] ? ' class="req"' : '';
-									?>
-									<td<?= $class ?>><?= $word ?></td><?
-								}
-								?>
-							</tr><?
-						}
-						?>
-					</tbody>
-				</table>
-				<div class="edit">
-					<input type="text" />
-				</div>
-			</div>
-			<div class="alerts"></div>
-		</form>
-		<?
+		// ======================================================================
+		// Панель фильтров
+		//
+		include ('combo.php');
+		//
+		// ======================================================================
 	}
 	//
 	// --------------------------------------
